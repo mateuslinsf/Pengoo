@@ -9,11 +9,6 @@
 #define __KEYBOARD_H__
 
 void keyboardInit();
-
 void keyboardDestroy();
-    
-int keyhit();
 
-int readch();
-
-#endif /* __KEYBOARD_H__ */
+#endif // __KEYBOARD_H__

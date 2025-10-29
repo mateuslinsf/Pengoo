@@ -4,13 +4,13 @@ CC = gcc
 # 2. Flags de Compilação
 # -Wall = Mostra todos os avisos (Warnings)
 # -Ilibs/cli-lib/include = Avisa onde estão os arquivos .h da biblioteca
-CFLAGS = -Wall -Ilibs/cli-lib/include
+# -Isrc = Avisa onde estão os nossos próprios arquivos .h (como o game.h)
+CFLAGS = -Wall -Ilibs/cli-lib/include -Isrc
 
 # 3. Nome do seu executável final
 TARGET = pengoo
 
 # 4. Arquivos .c que VÃO ser compilados
-# (Note que não incluímos o 'libs/cli-lib/src/main.c', pois ele é o 'main' de exemplo da lib)
 SRCS = src/main.c \
        libs/cli-lib/src/screen.c \
        libs/cli-lib/src/keyboard.c \
