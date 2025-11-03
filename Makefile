@@ -1,36 +1,43 @@
+#
+# Makefile para o Projeto Pengoo com RAYLIB
+#
+
 # 1. Compilador
 CC = gcc
 
-# 2. Flags de Compilação
-# -Wall = Mostra todos os avisos (Warnings)
-# -Ilibs/cli-lib/include = Avisa onde estão os arquivos .h da biblioteca
-# -Isrc = Avisa onde estão os nossos próprios arquivos .h (como o game.h)
-CFLAGS = -Wall -Ilibs/cli-lib/include -Isrc
-
-# 3. Nome do seu executável final
+# 2. Nome do executável final
 TARGET = pengoo
 
-# 4. Arquivos .c que VÃO ser compilados
-SRCS = src/main.c \
-       libs/cli-lib/src/screen.c \
-       libs/cli-lib/src/keyboard.c \
-       libs/cli-lib/src/timer.c
+# 3. Nossos arquivos .c (Note que só temos o main.c e o game.c agora)
+#    (Vamos criar o game.c no próximo passo)
+SRCS = src/main.c src/game.c
 
-# 5. Converte a lista de .c para .o (arquivos objeto)
+# 4. Converte a lista de .c para .o (arquivos objeto)
 OBJS = $(SRCS:.c=.o)
 
-# 6. Regra principal: o que fazer quando você digita 'make'
+# 5. Flags de Compilação (Onde achar o raylib.h)
+#    -Wall = Todos os avisos
+#    -I/usr/local/include = Onde o 'sudo make install' colocou o raylib.h
+#    -Isrc = Onde está o nosso game.h
+CFLAGS = -Wall -I/usr/local/include -Isrc -std=c99 -Wno-unused-variable
+
+# 6. Flags de Linkagem (Como conectar com a Raylib)
+#    -L/usr/local/lib = Onde o 'sudo make install' colocou o libraylib.a
+#    -lraylib = O nome da biblioteca Raylib
+#    -lGL -lm -lpthread -ldl -lrt -lX11 = Outras bibliotecas que a Raylib precisa
+LDFLAGS = -L/usr/local/lib -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+
+# 7. Regra principal: o que fazer quando você digita 'make'
 all: $(TARGET)
 
-# 7. Regra de "linkagem": junta todos os .o para criar o executável 'pengoo'
+# 8. Regra de "linkagem": junta tudo para criar o 'pengoo'
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) -o $(TARGET)
+	$(CC) $(OBJS) -o $(TARGET) $(LDFLAGS)
 
-# 8. Regra de compilação: como transformar um .c em um .o
+# 9. Regra de compilação: como transformar um .c em .o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# 9. Regra 'clean': apaga tudo que foi compilado para recomeçar
+# 10. Regra 'clean': apaga tudo que foi compilado
 clean:
 	rm -f $(OBJS) $(TARGET)
-
