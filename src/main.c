@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO PRINCIPAL: src/main.c (COM GRAVIDADE E QUIT 'q')
+ * ARQUIVO PRINCIPAL: src/main.c (COM PULO E GRAVIDADE)
  * ========================================
  */
 
@@ -15,13 +15,14 @@
 // Bibliotecas padrão
 #include <stdio.h>
 #include <unistd.h> // Para usleep() e read()
-#include <fcntl.h>  // <-- MUDANÇA: Para o Quit Fácil (fcntl)
+#include <fcntl.h>  // Para o Quit Fácil (fcntl)
 
 // --- Constantes do Jogo ---
 #define LARGURA_TELA 80
 #define ALTURA_TELA 24
 #define PISO (ALTURA_TELA - 2)
-#define GRAVIDADE 0.5f         // <-- MUDANÇA: Adicionada a gravidade
+#define GRAVIDADE 0.5f
+#define FORCA_PULO -1.5f // <-- MUDANÇA PULO: Força do pulo (negativo é para cima)
 
 int main() {
     
@@ -32,8 +33,6 @@ int main() {
     screenInit(1);
     keyboardInit();
     
-    // --- MUDANÇA: Comando para o Quit Fácil ---
-    // Coloca a leitura do teclado (stdin) em modo "não-bloqueante"
     fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 
     estado.rodando = 1;
@@ -42,37 +41,46 @@ int main() {
     estado.listaDeObstaculos = NULL;
 
     pinguim.x = 5;
-    pinguim.y = 10; // <-- MUDANÇA: Pinguim começa no ar
+    pinguim.y = 10; 
     pinguim.velocidade_y = 0.0f;
-    pinguim.estaNoChao = 0; // <-- MUDANÇA: Ele não está no chão
+    pinguim.estaNoChao = 0;
     pinguim.puloDuploDisponivel = 1;
     pinguim.arteASCII = "P"; 
 
     // --- 2. Game Loop ---
     while (estado.rodando) {
         
-        // --- 2.1 Processar Inputs --- // <-- MUDANÇA: Quit Fácil
+        // --- 2.1 Processar Inputs ---
         char tecla = '\0';
-        read(STDIN_FILENO, &tecla, 1); // Tenta ler 1 tecla
+        read(STDIN_FILENO, &tecla, 1); 
 
         if (tecla == 'q') {
-            estado.rodando = 0; // Para o jogo
+            estado.rodando = 0;
+        }
+
+        // --- MUDANÇA PULO: Lógica do Pulo/Pulo Duplo ---
+        if (tecla == ' ') { // ' ' (espaço) é a tecla de pulo
+            if (pinguim.estaNoChao) {
+                // Pulo Normal
+                pinguim.velocidade_y = FORCA_PULO;
+                pinguim.estaNoChao = 0;
+                pinguim.puloDuploDisponivel = 1; // Habilita o pulo duplo
+            } else if (pinguim.puloDuploDisponivel) {
+                // Pulo Duplo
+                pinguim.velocidade_y = FORCA_PULO; // Dá outro impulso
+                pinguim.puloDuploDisponivel = 0; // Desabilita até tocar o chão
+            }
         }
         
-        // --- 2.2 Atualizar Lógica ---  // <-- MUDANÇA: LÓGICA DA FÍSICA
-        
-        // 1. Aplica a gravidade à velocidade vertical
+        // --- 2.2 Atualizar Lógica (Gravidade) ---
         pinguim.velocidade_y = pinguim.velocidade_y + GRAVIDADE;
-        
-        // 2. Atualiza a posição Y do pinguim baseado na velocidade
         pinguim.y = (int)(pinguim.y + pinguim.velocidade_y);
 
-        // 3. Checa se o pinguim bateu no chão
         if (pinguim.y >= PISO) {
             pinguim.y = PISO;
             pinguim.velocidade_y = 0;
             pinguim.estaNoChao = 1;
-            pinguim.puloDuploDisponivel = 1;
+            pinguim.puloDuploDisponivel = 1; // Reseta o pulo duplo no chão
         }
         
         // --- 2.3 Renderizar (Desenhar) a Tela ---
@@ -87,7 +95,7 @@ int main() {
         }
 
         screenGotoxy(0, 0); 
-        printf("Pontuação: %d (Aperte 'q' para sair)", estado.pontuacao); // <-- MUDANÇA
+        printf("Pontuação: %d (Aperte 'q' para sair)", estado.pontuacao);
 
         screenUpdate(); 
 
