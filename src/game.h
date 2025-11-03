@@ -1,13 +1,13 @@
-#ifndef GAME_H
-#define GAME_H
-
 /*
  * ========================================
- * ESTRUTURAS DE DADOS (structs)
+ * ARQUIVO: src/game.h (Atualizado)
  * ========================================
  */
 
-// --- Requisito: Structs e Ponteiros ---
+#ifndef GAME_H
+#define GAME_H
+
+// --- Structs (permanecem iguais) ---
 typedef struct {
     int x;
     int y;
@@ -26,13 +26,11 @@ typedef struct {
     char* arteASCII;
 } Obstaculo;
 
-// --- Requisito: Listas Encadeadas e Alocação Dinâmica ---
 typedef struct NoObstaculo {
     Obstaculo* obstaculo;
     struct NoObstaculo* proximo;
 } NoObstaculo;
 
-// --- Estrutura Principal do Jogo ---
 typedef struct {
     int pontuacao;
     int rodando;
@@ -51,8 +49,8 @@ Pinguim criarPinguim(int x, int y);
 void atualizarPinguim(Pinguim* pinguim);
 void pinguimPular(Pinguim* pinguim);
 
-// <-- ERRO CORRIGIDO AQUI (removido o 'Obstaculo* obs') -->
-void adicionarObstaculo(NoObstaculo** lista); 
+// <-- MUDANÇA AQUI: Função agora recebe a pontuação -->
+void adicionarObstaculo(NoObstaculo** lista, int pontuacao); 
 
 void atualizarObstaculos(NoObstaculo** lista, float velocidade);
 void desenharObstaculos(NoObstaculo* lista);

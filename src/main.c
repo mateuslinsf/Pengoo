@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO PRINCIPAL: src/main.c (COLISÃO E FÍSICA CORRIGIDAS)
+ * ARQUIVO PRINCIPAL: src/main.c (COM INIMIGOS VARIADOS)
  * ========================================
  */
 
@@ -24,7 +24,7 @@
 #define LARGURA_TELA 80
 #define ALTURA_TELA 24
 #define PISO (ALTURA_TELA - 2)
-#define GRAVIDADE 0.25f       // <-- MUDANÇA: Gravidade ajustada
+#define GRAVIDADE 0.25f
 #define FORCA_PULO -1.0f
 
 // Constantes dos Obstáculos
@@ -55,7 +55,49 @@ void imprimirBuffer(char buffer[ALTURA_TELA][LARGURA_TELA]) {
 }
 
 // --- Funções da Lista Encadeada (Obstáculos) ---
-void adicionarObstaculo(NoObstaculo** lista) {
+// <-- MUDANÇA AQUI: Função agora recebe a pontuação -->
+void adicionarObstaculo(NoObstaculo** lista, int pontuacao) {
+    
+    // <-- MUDANÇA: Agora sorteia 4 tipos (0=Terrestre, 1=Aéreo, 2=Buraco, 3=Terrestre 2x1) -->
+    int tipo = rand() % 4; 
+
+    // --- Pedido 2: Obstáculo Terrestre 2x1 (1 de largura, 2 de altura) ---
+    if (tipo == 3) {
+        // Criar o obstáculo de baixo
+        Obstaculo* obsBaixo = (Obstaculo*)malloc(sizeof(Obstaculo));
+        NoObstaculo* noBaixo = (NoObstaculo*)malloc(sizeof(NoObstaculo));
+        if (obsBaixo == NULL || noBaixo == NULL) { /* Falha na alocação */ return; }
+        
+        obsBaixo->x = LARGURA_TELA - 2;
+        obsBaixo->y = PISO; // No chão
+        obsBaixo->largura = 1;
+        obsBaixo->arteASCII = ART_TERRESTRE;
+        obsBaixo->tipo = 0; // Tipo 0 (sólido) para colisão
+        
+        noBaixo->obstaculo = obsBaixo;
+        noBaixo->proximo = *lista; // Adiciona na lista
+        *lista = noBaixo;
+
+        // Criar o obstáculo de cima
+        Obstaculo* obsCima = (Obstaculo*)malloc(sizeof(Obstaculo));
+        NoObstaculo* noCima = (NoObstaculo*)malloc(sizeof(NoObstaculo));
+        if (obsCima == NULL || noCima == NULL) { /* Falha na alocação */ return; }
+        
+        obsCima->x = LARGURA_TELA - 2;
+        obsCima->y = PISO - 1; // Logo acima do chão
+        obsCima->largura = 1;
+        obsCima->arteASCII = ART_TERRESTRE;
+        obsCima->tipo = 0; // Tipo 0 (sólido) para colisão
+        
+        noCima->obstaculo = obsCima;
+        noCima->proximo = *lista; // Adiciona na lista
+        *lista = noCima;
+        
+        return; // Já criamos os dois obstáculos, podemos sair
+    }
+
+    // --- Se não for 2x1, é um obstáculo normal ---
+    
     // Alocação Dinâmica (Obstáculo)
     Obstaculo* novoObs = (Obstaculo*)malloc(sizeof(Obstaculo));
     if (novoObs == NULL) return; 
@@ -69,21 +111,36 @@ void adicionarObstaculo(NoObstaculo** lista) {
 
     // Configuração do Obstáculo
     novoObs->x = LARGURA_TELA - 2; 
-    int tipo = rand() % 3; // Aleatório: 0, 1, ou 2
     novoObs->tipo = tipo;
 
-    if (tipo == 0) { // Tipo 0: Terrestre
+    if (tipo == 0) { // Tipo 0: Terrestre (Simples)
         novoObs->y = PISO;
         novoObs->largura = 1;
         novoObs->arteASCII = ART_TERRESTRE;
-    } else if (tipo == 1) { // Tipo 1: Aéreo
-        novoObs->y = PISO - 3; 
+    } 
+    else if (tipo == 1) { // --- Pedido 1: Aéreo (Várias Alturas) ---
         novoObs->largura = 1;
         novoObs->arteASCII = ART_AEREO;
-    } else { // Tipo 2: Buraco
+        
+        int alturaSorteada = rand() % 3; // Sorteia 0, 1, ou 2
+        if (alturaSorteada == 0) {
+            novoObs->y = PISO - 3; // Original (alto)
+        } else if (alturaSorteada == 1) {
+            novoObs->y = PISO - 2; // "um pouco mais abaixo"
+        } else {
+            novoObs->y = PISO - 1; // "um pouco mais abaixo ainda"
+        }
+    } 
+    else if (tipo == 2) { // --- Pedido 3 & 4: Buraco (Normal ou Grande) ---
         novoObs->y = PISO + 1; // Posição do chão
-        novoObs->largura = LARGURA_BURACO;
         novoObs->arteASCII = " "; // Buracos são ' '
+
+        // Checa a pontuação para decidir o tamanho
+        if (pontuacao > 650) {
+            novoObs->largura = (int)(LARGURA_BURACO * 1.5); // 8 * 1.5 = 12
+        } else {
+            novoObs->largura = LARGURA_BURACO; // 8
+        }
     }
 
     // Adiciona na Lista Encadeada
@@ -163,7 +220,8 @@ int main() {
         // (Lógica de Spawn)
         contadorSpawn++;
         if (contadorSpawn > intervaloSpawnAtual) {
-            adicionarObstaculo(&estado.listaDeObstaculos);
+            // <-- MUDANÇA AQUI: Passa a pontuação para a função -->
+            adicionarObstaculo(&estado.listaDeObstaculos, estado.pontuacao);
             contadorSpawn = 0;
         }
 
@@ -187,39 +245,25 @@ int main() {
             }
         }
 
-        // <-- MUDANÇA: Lógica de Colisão Corrigida -->
+        // (Detecção de Colisão Robusta)
         atual = estado.listaDeObstaculos;
         while (atual != NULL) {
             Obstaculo* obs = atual->obstaculo;
             int velocidadeInt = (int)estado.velocidadeJogo;
-
-            // Esta é a posição X do pinguim
             int pinguimX = pinguim.x; 
-            
-            // Esta é a posição Y do pinguim
             int pinguimY = pinguim.y;
-
-            // Este é o "hitbox" (área) do obstáculo
             int obsX_inicio = obs->x;
             int obsX_fim = obs->x + obs->largura;
             int obsY = obs->y;
 
-            // --- Lógica de Colisão Robusta ---
-            
-            // O obstáculo acabou de cruzar o pinguim?
-            // (Se a posição ATUAL do obstáculo é MENOR ou IGUAL ao pinguim E
-            //  a posição ANTIGA (atual + velocidade) era MAIOR que o pinguim)
             if ( (obsX_inicio <= pinguimX) && 
                  ((obsX_inicio + velocidadeInt) > pinguimX) ) 
             {
-                // Se o obstáculo cruzou, checa o Y (Colisão Sólida # ou @)
-                if ( (obs->tipo == 0 || obs->tipo == 1) && (pinguimY == obsY) ) {
+                if ( (obs->tipo == 0) && (pinguimY == obsY) ) { // Tipo 0 = Sólido (qualquer altura)
                     estado.rodando = 0; // Game Over
                 }
             }
 
-            // Checagem de Buraco (Tipo 2)
-            // (O pinguim está no chão E dentro da área do buraco?)
             if (obs->tipo == 2) {
                 if ( (pinguimY == PISO) && 
                      (pinguimX >= obsX_inicio) && 
@@ -228,7 +272,6 @@ int main() {
                     estado.rodando = 0; // Game Over
                 }
             }
-
             atual = atual->proximo;
         }
 
