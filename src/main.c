@@ -1,8 +1,7 @@
 /*
  * ========================================
- * ARQUIVO PRINCIPAL: src/main.c
+ * ARQUIVO PRINCIPAL: src/main.c (COM GRAVIDADE E QUIT 'q')
  * ========================================
- * Este arquivo contém o "Game Loop" principal.
  */
 
 // Bibliotecas da cli-lib
@@ -15,12 +14,14 @@
 
 // Bibliotecas padrão
 #include <stdio.h>
-#include <unistd.h> // Para a função usleep()
+#include <unistd.h> // Para usleep() e read()
+#include <fcntl.h>  // <-- MUDANÇA: Para o Quit Fácil (fcntl)
 
 // --- Constantes do Jogo ---
 #define LARGURA_TELA 80
 #define ALTURA_TELA 24
-#define PISO (ALTURA_TELA - 2) // Posição Y do chão
+#define PISO (ALTURA_TELA - 2)
+#define GRAVIDADE 0.5f         // <-- MUDANÇA: Adicionada a gravidade
 
 int main() {
     
@@ -28,33 +29,52 @@ int main() {
     EstadoJogo estado;
     Pinguim pinguim;
 
-    screenInit(1); // O '1' esconde o cursor
+    screenInit(1);
     keyboardInit();
+    
+    // --- MUDANÇA: Comando para o Quit Fácil ---
+    // Coloca a leitura do teclado (stdin) em modo "não-bloqueante"
+    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 
-    estado.rodando = 1; // 1 = true
+    estado.rodando = 1;
     estado.pontuacao = 0;
     estado.velocidadeJogo = 1.0f;
     estado.listaDeObstaculos = NULL;
 
     pinguim.x = 5;
-    pinguim.y = PISO; 
+    pinguim.y = 10; // <-- MUDANÇA: Pinguim começa no ar
     pinguim.velocidade_y = 0.0f;
-    pinguim.estaNoChao = 1;
+    pinguim.estaNoChao = 0; // <-- MUDANÇA: Ele não está no chão
     pinguim.puloDuploDisponivel = 1;
     pinguim.arteASCII = "P"; 
 
     // --- 2. Game Loop ---
     while (estado.rodando) {
         
-        // --- 2.1 Processar Inputs ---
-        // (A cli-lib não tem uma função de input que não trava o jogo)
-        // (Vamos ter que implementar 'kbhit()' nós mesmos depois)
-        // (Por enquanto, para sair do jogo, aperte Ctrl+C no terminal)
+        // --- 2.1 Processar Inputs --- // <-- MUDANÇA: Quit Fácil
+        char tecla = '\0';
+        read(STDIN_FILENO, &tecla, 1); // Tenta ler 1 tecla
 
+        if (tecla == 'q') {
+            estado.rodando = 0; // Para o jogo
+        }
+        
+        // --- 2.2 Atualizar Lógica ---  // <-- MUDANÇA: LÓGICA DA FÍSICA
+        
+        // 1. Aplica a gravidade à velocidade vertical
+        pinguim.velocidade_y = pinguim.velocidade_y + GRAVIDADE;
+        
+        // 2. Atualiza a posição Y do pinguim baseado na velocidade
+        pinguim.y = (int)(pinguim.y + pinguim.velocidade_y);
 
-        // --- 2.2 Atualizar Lógica ---
-        // (nada ainda)
-
+        // 3. Checa se o pinguim bateu no chão
+        if (pinguim.y >= PISO) {
+            pinguim.y = PISO;
+            pinguim.velocidade_y = 0;
+            pinguim.estaNoChao = 1;
+            pinguim.puloDuploDisponivel = 1;
+        }
+        
         // --- 2.3 Renderizar (Desenhar) a Tela ---
         screenClear(); 
         
@@ -67,14 +87,11 @@ int main() {
         }
 
         screenGotoxy(0, 0); 
-        // Vamos remover o "(Aperte 'q' para sair)" por enquanto
-        printf("Pontuação: %d", estado.pontuacao); 
+        printf("Pontuação: %d (Aperte 'q' para sair)", estado.pontuacao); // <-- MUDANÇA
 
         screenUpdate(); 
 
         // --- 2.4 Controle de "Frame Rate" ---
-        // Usamos usleep (microssegundos) da <unistd.h>
-        // 33000 microssegundos = 33 milissegundos = ~30 FPS
         usleep(33000); 
     }
 
