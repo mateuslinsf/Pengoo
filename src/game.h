@@ -51,7 +51,9 @@ Pinguim criarPinguim(int x, int y);
 void atualizarPinguim(Pinguim* pinguim);
 void pinguimPular(Pinguim* pinguim);
 
-void adicionarObstaculo(NoObstaculo** lista, Obstaculo* obs);
+// <-- ERRO CORRIGIDO AQUI (removido o 'Obstaculo* obs') -->
+void adicionarObstaculo(NoObstaculo** lista); 
+
 void atualizarObstaculos(NoObstaculo** lista, float velocidade);
 void desenharObstaculos(NoObstaculo* lista);
 void liberarListaObstaculos(NoObstaculo** lista);
