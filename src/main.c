@@ -1,17 +1,21 @@
 /*
  * ========================================
- * ARQUIVO PRINCIPAL: src/main.c (COM DIFICULDADE PROGRESSIVA)
+ * ARQUIVO PRINCIPAL: src/main.c (COLISÃO E FÍSICA CORRIGIDAS)
  * ========================================
  */
 
-// ... (includes: screen.h, keyboard.h, timer.h, game.h, stdio.h, unistd.h, fcntl.h) ...
+// Bibliotecas da cli-lib
 #include "screen.h"
 #include "keyboard.h"
 #include "timer.h"
+
+// Nosso arquivo com as structs do jogo
 #include "game.h"
+
+// Bibliotecas padrão
 #include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <unistd.h> // Para usleep() e read()
+#include <fcntl.h>  // Para o Quit Fácil (fcntl)
 #include <stdlib.h> // Para malloc(), free() e rand()
 #include <time.h>   // Para srand()
 #include <string.h> // Para memset()
@@ -20,7 +24,7 @@
 #define LARGURA_TELA 80
 #define ALTURA_TELA 24
 #define PISO (ALTURA_TELA - 2)
-#define GRAVIDADE 0.25f
+#define GRAVIDADE 0.25f       // <-- MUDANÇA: Gravidade ajustada
 #define FORCA_PULO -1.0f
 
 // Constantes dos Obstáculos
@@ -28,12 +32,12 @@
 #define ART_AEREO "@"
 #define LARGURA_BURACO 8
 
-// <-- NOVO: Constantes de Dificuldade -->
-#define INTERVALO_SPAWN_INICIAL 100 // Começa com 1 obstáculo a cada 100 frames
-#define PONTOS_PARA_SUBIR_NIVEL 200  // A cada 200 pontos, aumenta a dificuldade
-#define INTERVALO_SPAWN_MINIMO 40   // Limite máximo de frequência
+// Constantes de Dificuldade
+#define INTERVALO_SPAWN_INICIAL 100 
+#define PONTOS_PARA_SUBIR_NIVEL 200  
+#define INTERVALO_SPAWN_MINIMO 40   
 
-// ... (Funções limparBuffer e imprimirBuffer permanecem iguais) ...
+// --- Funções do Buffer de Tela (Matriz) ---
 void limparBuffer(char buffer[ALTURA_TELA][LARGURA_TELA]) {
     memset(buffer, ' ', sizeof(char) * ALTURA_TELA * LARGURA_TELA);
 }
@@ -50,35 +54,39 @@ void imprimirBuffer(char buffer[ALTURA_TELA][LARGURA_TELA]) {
     screenUpdate();
 }
 
-// ... (Função adicionarObstaculo permanece igual) ...
+// --- Funções da Lista Encadeada (Obstáculos) ---
 void adicionarObstaculo(NoObstaculo** lista) {
+    // Alocação Dinâmica (Obstáculo)
     Obstaculo* novoObs = (Obstaculo*)malloc(sizeof(Obstaculo));
     if (novoObs == NULL) return; 
 
+    // Alocação Dinâmica (Nó da Lista)
     NoObstaculo* novoNo = (NoObstaculo*)malloc(sizeof(NoObstaculo));
     if (novoNo == NULL) {
         free(novoObs); 
         return;
     }
 
+    // Configuração do Obstáculo
     novoObs->x = LARGURA_TELA - 2; 
-    int tipo = rand() % 3;
+    int tipo = rand() % 3; // Aleatório: 0, 1, ou 2
     novoObs->tipo = tipo;
 
-    if (tipo == 0) { // Terrestre
+    if (tipo == 0) { // Tipo 0: Terrestre
         novoObs->y = PISO;
         novoObs->largura = 1;
         novoObs->arteASCII = ART_TERRESTRE;
-    } else if (tipo == 1) { // Aéreo
+    } else if (tipo == 1) { // Tipo 1: Aéreo
         novoObs->y = PISO - 3; 
         novoObs->largura = 1;
         novoObs->arteASCII = ART_AEREO;
-    } else { // Buraco
-        novoObs->y = PISO + 1;
+    } else { // Tipo 2: Buraco
+        novoObs->y = PISO + 1; // Posição do chão
         novoObs->largura = LARGURA_BURACO;
-        novoObs->arteASCII = " ";
+        novoObs->arteASCII = " "; // Buracos são ' '
     }
 
+    // Adiciona na Lista Encadeada
     novoNo->obstaculo = novoObs;
     novoNo->proximo = *lista;
     *lista = novoNo;
@@ -93,7 +101,6 @@ int main() {
     char telaBuffer[ALTURA_TELA][LARGURA_TELA]; 
     srand(time(NULL));
 
-    // <-- NOVO: Variáveis de Dificuldade -->
     int contadorSpawn = 0;
     int intervaloSpawnAtual = INTERVALO_SPAWN_INICIAL;
     int proximoNivelPontuacao = PONTOS_PARA_SUBIR_NIVEL;
@@ -104,7 +111,7 @@ int main() {
 
     estado.rodando = 1;
     estado.pontuacao = 0;
-    estado.velocidadeJogo = 1.0f; // <-- NOVO: Velocidade inicial
+    estado.velocidadeJogo = 1.0f; 
     estado.listaDeObstaculos = NULL;
 
     pinguim.x = 5;
@@ -145,47 +152,31 @@ int main() {
             pinguim.puloDuploDisponivel = 1;
         }
 
-        // <-- NOVO: Atualiza Pontuação e Dificuldade -->
-        estado.pontuacao++; // Ganha 1 ponto por frame
-
+        // (Atualiza Pontuação e Dificuldade)
+        estado.pontuacao++; 
         if (estado.pontuacao > proximoNivelPontuacao) {
-            // 1. Aumenta a velocidade (quantidade)
-            if (estado.velocidadeJogo < 3.0f) { // Limite de velocidade
-                estado.velocidadeJogo += 0.2f; 
-            }
-            
-            // 2. Aumenta a frequência (diminui o tempo)
-            if (intervaloSpawnAtual > INTERVALO_SPAWN_MINIMO) {
-                intervaloSpawnAtual -= 5; // Fica 5 frames mais rápido
-            }
-            
-            // Define o próximo "marco"
+            if (estado.velocidadeJogo < 3.0f) { estado.velocidadeJogo += 0.2f; }
+            if (intervaloSpawnAtual > INTERVALO_SPAWN_MINIMO) { intervaloSpawnAtual -= 5; }
             proximoNivelPontuacao += PONTOS_PARA_SUBIR_NIVEL;
         }
 
-
-        // <-- NOVO: Lógica de Spawn (usa a variável) -->
+        // (Lógica de Spawn)
         contadorSpawn++;
-        if (contadorSpawn > intervaloSpawnAtual) { // Usa a variável
+        if (contadorSpawn > intervaloSpawnAtual) {
             adicionarObstaculo(&estado.listaDeObstaculos);
             contadorSpawn = 0;
         }
 
-        // Mover Obstáculos (usa a velocidade variável)
+        // (Mover Obstáculos e Limpar)
         NoObstaculo* atual = estado.listaDeObstaculos;
         NoObstaculo* anterior = NULL;
-
         while (atual != NULL) {
-            // Move o obstáculo (agora usa a velocidade do estado)
             atual->obstaculo->x -= (int)estado.velocidadeJogo; 
 
             if (atual->obstaculo->x + atual->obstaculo->largura < 0) {
                 NoObstaculo* noParaRemover = atual;
-                if (anterior == NULL) { 
-                    estado.listaDeObstaculos = atual->proximo;
-                } else { 
-                    anterior->proximo = atual->proximo;
-                }
+                if (anterior == NULL) { estado.listaDeObstaculos = atual->proximo; }
+                else { anterior->proximo = atual->proximo; }
                 atual = atual->proximo; 
                 
                 free(noParaRemover->obstaculo);
@@ -196,6 +187,51 @@ int main() {
             }
         }
 
+        // <-- MUDANÇA: Lógica de Colisão Corrigida -->
+        atual = estado.listaDeObstaculos;
+        while (atual != NULL) {
+            Obstaculo* obs = atual->obstaculo;
+            int velocidadeInt = (int)estado.velocidadeJogo;
+
+            // Esta é a posição X do pinguim
+            int pinguimX = pinguim.x; 
+            
+            // Esta é a posição Y do pinguim
+            int pinguimY = pinguim.y;
+
+            // Este é o "hitbox" (área) do obstáculo
+            int obsX_inicio = obs->x;
+            int obsX_fim = obs->x + obs->largura;
+            int obsY = obs->y;
+
+            // --- Lógica de Colisão Robusta ---
+            
+            // O obstáculo acabou de cruzar o pinguim?
+            // (Se a posição ATUAL do obstáculo é MENOR ou IGUAL ao pinguim E
+            //  a posição ANTIGA (atual + velocidade) era MAIOR que o pinguim)
+            if ( (obsX_inicio <= pinguimX) && 
+                 ((obsX_inicio + velocidadeInt) > pinguimX) ) 
+            {
+                // Se o obstáculo cruzou, checa o Y (Colisão Sólida # ou @)
+                if ( (obs->tipo == 0 || obs->tipo == 1) && (pinguimY == obsY) ) {
+                    estado.rodando = 0; // Game Over
+                }
+            }
+
+            // Checagem de Buraco (Tipo 2)
+            // (O pinguim está no chão E dentro da área do buraco?)
+            if (obs->tipo == 2) {
+                if ( (pinguimY == PISO) && 
+                     (pinguimX >= obsX_inicio) && 
+                     (pinguimX < obsX_fim) ) 
+                {
+                    estado.rodando = 0; // Game Over
+                }
+            }
+
+            atual = atual->proximo;
+        }
+
         
         // --- 2.3 Renderizar (Usando a Matriz Buffer) ---
         limparBuffer(telaBuffer);
@@ -203,7 +239,12 @@ int main() {
         // 1. Desenha Pinguim
         telaBuffer[pinguim.y][pinguim.x] = *pinguim.arteASCII; 
 
-        // 2. Desenha Obstáculos
+        // 2. Desenha o Chão (PRIMEIRO)
+        for (int x = 0; x < LARGURA_TELA; x++) {
+            telaBuffer[PISO + 1][x] = '-';
+        }
+
+        // 3. Desenha os Obstáculos (DEPOIS)
         atual = estado.listaDeObstaculos;
         while (atual != NULL) {
             Obstaculo* obs = atual->obstaculo;
@@ -215,17 +256,9 @@ int main() {
             }
             atual = atual->proximo;
         }
-
-        // 3. Desenha o Chão
-        for (int x = 0; x < LARGURA_TELA; x++) {
-            if (telaBuffer[PISO + 1][x] == ' ') { 
-                telaBuffer[PISO + 1][x] = '-';
-            }
-        }
         
         // 4. Desenha a Pontuação (HUD)
         char hud[LARGURA_TELA];
-        // <-- NOVO: Mostra a velocidade e o tempo de spawn para debug -->
         sprintf(hud, "Pontos: %d | Velocidade: %.1f | Spawn a cada: %d (Aperte 'q')", 
                 estado.pontuacao, estado.velocidadeJogo, intervaloSpawnAtual);
                 
@@ -233,15 +266,30 @@ int main() {
             telaBuffer[0][i] = hud[i];
         }
 
+        // (Mensagem de Game Over)
+        if (estado.rodando == 0) {
+            char* gameOverMsg = "G A M E   O V E R";
+            int startX = (LARGURA_TELA - strlen(gameOverMsg)) / 2;
+            int startY = ALTURA_TELA / 2;
+            for(int i = 0; gameOverMsg[i] != '\0'; i++) {
+                telaBuffer[startY][startX + i] = gameOverMsg[i];
+            }
+        }
+
         // 5. Imprime o Buffer
         imprimirBuffer(telaBuffer);
+        
+        if (estado.rodando == 0) {
+            usleep(2000000); // Pausa por 2s
+        }
 
         // --- 2.4 Controle de "Frame Rate" ---
         usleep(33000); 
     }
 
     // --- 3. Finalização ---
-    NoObstaculo* atual = estado.listaDeObstaculos;
+    // (Libera memória da lista encadeada)
+    NoObstaculo* atual = estado.listaDeObstaculos; 
     while (atual != NULL) {
         NoObstaculo* proximo = atual->proximo;
         free(atual->obstaculo);
@@ -256,8 +304,3 @@ int main() {
 
     return 0;
 }
-
-
-
-
-
