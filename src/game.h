@@ -1,13 +1,18 @@
 /*
  * ========================================
- * ARQUIVO: src/game.h (Atualizado)
+ * ARQUIVO: src/game.h (Atualizado com Ranking)
  * ========================================
  */
 
 #ifndef GAME_H
 #define GAME_H
 
-// --- Structs (permanecem iguais) ---
+// --- Structs (sem mudanças) ---
+typedef struct {
+    char nome[4]; // 3 letras (ex: 'LFG') + 1 caractere nulo '\0'
+    int pontuacao;
+} Score;
+
 typedef struct {
     int x;
     int y;
@@ -36,6 +41,7 @@ typedef struct {
     int rodando;
     float velocidadeJogo;
     NoObstaculo* listaDeObstaculos; 
+    Score topScores[3];
 } EstadoJogo;
 
 
@@ -45,13 +51,21 @@ typedef struct {
  * ========================================
  */
 
+// --- Funções de High Score (Atualizadas) ---
+void carregarHighScores(Score topScores[3]);
+void salvarHighScores(Score topScores[3]);
+// <-- MUDANÇA AQUI: Renomeada e com retorno de ranking -->
+int obterRanking(Score topScores[3], int pontuacaoAtual); 
+// <-- MUDANÇA AQUI: Agora recebe o ranking para inserir certo -->
+void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int ranking); 
+
+
+// --- Funções do Jogo (Sem mudanças) ---
 Pinguim criarPinguim(int x, int y);
 void atualizarPinguim(Pinguim* pinguim);
 void pinguimPular(Pinguim* pinguim);
 
-// <-- MUDANÇA AQUI: Função agora recebe a pontuação -->
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao); 
-
 void atualizarObstaculos(NoObstaculo** lista, float velocidade);
 void desenharObstaculos(NoObstaculo* lista);
 void liberarListaObstaculos(NoObstaculo** lista);

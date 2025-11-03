@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO PRINCIPAL: src/main.c (COM INIMIGOS VARIADOS)
+ * ARQUIVO PRINCIPAL: src/main.c (COM CORREÇÃO DO STACK SMASHING)
  * ========================================
  */
 
@@ -20,24 +20,21 @@
 #include <time.h>   // Para srand()
 #include <string.h> // Para memset()
 
-// --- Constantes do Jogo ---
+// --- Constantes (sem mudanças) ---
 #define LARGURA_TELA 80
 #define ALTURA_TELA 24
 #define PISO (ALTURA_TELA - 2)
 #define GRAVIDADE 0.25f
 #define FORCA_PULO -1.0f
-
-// Constantes dos Obstáculos
 #define ART_TERRESTRE "#" 
 #define ART_AEREO "@"
 #define LARGURA_BURACO 8
-
-// Constantes de Dificuldade
 #define INTERVALO_SPAWN_INICIAL 100 
 #define PONTOS_PARA_SUBIR_NIVEL 200  
 #define INTERVALO_SPAWN_MINIMO 40   
+#define ARQUIVO_SCORES "highscores.txt"
 
-// --- Funções do Buffer de Tela (Matriz) ---
+// --- Funções de Buffer e Obstáculos (sem mudanças) ---
 void limparBuffer(char buffer[ALTURA_TELA][LARGURA_TELA]) {
     memset(buffer, ' ', sizeof(char) * ALTURA_TELA * LARGURA_TELA);
 }
@@ -54,99 +51,109 @@ void imprimirBuffer(char buffer[ALTURA_TELA][LARGURA_TELA]) {
     screenUpdate();
 }
 
-// --- Funções da Lista Encadeada (Obstáculos) ---
-// <-- MUDANÇA AQUI: Função agora recebe a pontuação -->
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao) {
-    
-    // <-- MUDANÇA: Agora sorteia 4 tipos (0=Terrestre, 1=Aéreo, 2=Buraco, 3=Terrestre 2x1) -->
     int tipo = rand() % 4; 
-
-    // --- Pedido 2: Obstáculo Terrestre 2x1 (1 de largura, 2 de altura) ---
     if (tipo == 3) {
-        // Criar o obstáculo de baixo
         Obstaculo* obsBaixo = (Obstaculo*)malloc(sizeof(Obstaculo));
         NoObstaculo* noBaixo = (NoObstaculo*)malloc(sizeof(NoObstaculo));
-        if (obsBaixo == NULL || noBaixo == NULL) { /* Falha na alocação */ return; }
-        
+        if (obsBaixo == NULL || noBaixo == NULL) { return; }
         obsBaixo->x = LARGURA_TELA - 2;
-        obsBaixo->y = PISO; // No chão
+        obsBaixo->y = PISO;
         obsBaixo->largura = 1;
         obsBaixo->arteASCII = ART_TERRESTRE;
-        obsBaixo->tipo = 0; // Tipo 0 (sólido) para colisão
-        
+        obsBaixo->tipo = 0;
         noBaixo->obstaculo = obsBaixo;
-        noBaixo->proximo = *lista; // Adiciona na lista
+        noBaixo->proximo = *lista;
         *lista = noBaixo;
 
-        // Criar o obstáculo de cima
         Obstaculo* obsCima = (Obstaculo*)malloc(sizeof(Obstaculo));
         NoObstaculo* noCima = (NoObstaculo*)malloc(sizeof(NoObstaculo));
-        if (obsCima == NULL || noCima == NULL) { /* Falha na alocação */ return; }
-        
+        if (obsCima == NULL || noCima == NULL) { return; }
         obsCima->x = LARGURA_TELA - 2;
-        obsCima->y = PISO - 1; // Logo acima do chão
+        obsCima->y = PISO - 1;
         obsCima->largura = 1;
         obsCima->arteASCII = ART_TERRESTRE;
-        obsCima->tipo = 0; // Tipo 0 (sólido) para colisão
-        
+        obsCima->tipo = 0;
         noCima->obstaculo = obsCima;
-        noCima->proximo = *lista; // Adiciona na lista
+        noCima->proximo = *lista;
         *lista = noCima;
-        
-        return; // Já criamos os dois obstáculos, podemos sair
-    }
-
-    // --- Se não for 2x1, é um obstáculo normal ---
-    
-    // Alocação Dinâmica (Obstáculo)
-    Obstaculo* novoObs = (Obstaculo*)malloc(sizeof(Obstaculo));
-    if (novoObs == NULL) return; 
-
-    // Alocação Dinâmica (Nó da Lista)
-    NoObstaculo* novoNo = (NoObstaculo*)malloc(sizeof(NoObstaculo));
-    if (novoNo == NULL) {
-        free(novoObs); 
         return;
     }
-
-    // Configuração do Obstáculo
+    Obstaculo* novoObs = (Obstaculo*)malloc(sizeof(Obstaculo));
+    if (novoObs == NULL) return; 
+    NoObstaculo* novoNo = (NoObstaculo*)malloc(sizeof(NoObstaculo));
+    if (novoNo == NULL) { free(novoObs); return; }
     novoObs->x = LARGURA_TELA - 2; 
     novoObs->tipo = tipo;
-
-    if (tipo == 0) { // Tipo 0: Terrestre (Simples)
+    if (tipo == 0) {
         novoObs->y = PISO;
         novoObs->largura = 1;
         novoObs->arteASCII = ART_TERRESTRE;
     } 
-    else if (tipo == 1) { // --- Pedido 1: Aéreo (Várias Alturas) ---
+    else if (tipo == 1) {
         novoObs->largura = 1;
         novoObs->arteASCII = ART_AEREO;
-        
-        int alturaSorteada = rand() % 3; // Sorteia 0, 1, ou 2
-        if (alturaSorteada == 0) {
-            novoObs->y = PISO - 3; // Original (alto)
-        } else if (alturaSorteada == 1) {
-            novoObs->y = PISO - 2; // "um pouco mais abaixo"
-        } else {
-            novoObs->y = PISO - 1; // "um pouco mais abaixo ainda"
-        }
+        int alturaSorteada = rand() % 3;
+        if (alturaSorteada == 0) { novoObs->y = PISO - 3; }
+        else if (alturaSorteada == 1) { novoObs->y = PISO - 2; }
+        else { novoObs->y = PISO - 1; }
     } 
-    else if (tipo == 2) { // --- Pedido 3 & 4: Buraco (Normal ou Grande) ---
-        novoObs->y = PISO + 1; // Posição do chão
-        novoObs->arteASCII = " "; // Buracos são ' '
-
-        // Checa a pontuação para decidir o tamanho
-        if (pontuacao > 650) {
-            novoObs->largura = (int)(LARGURA_BURACO * 1.5); // 8 * 1.5 = 12
-        } else {
-            novoObs->largura = LARGURA_BURACO; // 8
-        }
+    else if (tipo == 2) {
+        novoObs->y = PISO + 1;
+        novoObs->arteASCII = " ";
+        novoObs->largura = (pontuacao > 650) ? (int)(LARGURA_BURACO * 1.5) : LARGURA_BURACO;
     }
-
-    // Adiciona na Lista Encadeada
     novoNo->obstaculo = novoObs;
     novoNo->proximo = *lista;
     *lista = novoNo;
+}
+
+// --- Funções de High Score (sem mudanças) ---
+void carregarHighScores(Score topScores[3]) {
+    for (int i = 0; i < 3; i++) {
+        strcpy(topScores[i].nome, "---");
+        topScores[i].pontuacao = 0;
+    }
+    FILE* f = fopen(ARQUIVO_SCORES, "r");
+    if (f == NULL) { return; }
+    for (int i = 0; i < 3; i++) {
+        fscanf(f, "%s %d\n", topScores[i].nome, &topScores[i].pontuacao);
+    }
+    fclose(f);
+}
+
+void salvarHighScores(Score topScores[3]) {
+    FILE* f = fopen(ARQUIVO_SCORES, "w");
+    if (f == NULL) { return; }
+    for (int i = 0; i < 3; i++) {
+        fprintf(f, "%s %d\n", topScores[i].nome, topScores[i].pontuacao);
+    }
+    fclose(f);
+}
+
+int obterRanking(Score topScores[3], int pontuacaoAtual) {
+    if (pontuacaoAtual > topScores[0].pontuacao) { return 1; }
+    if (pontuacaoAtual > topScores[1].pontuacao) { return 2; }
+    if (pontuacaoAtual > topScores[2].pontuacao) { return 3; }
+    return 0;
+}
+
+void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int ranking) {
+    Score novoScore;
+    novoScore.pontuacao = pontuacaoAtual;
+    strcpy(novoScore.nome, nome);
+    if (ranking == 1) {
+        topScores[2] = topScores[1];
+        topScores[1] = topScores[0];
+        topScores[0] = novoScore;
+    } 
+    else if (ranking == 2) {
+        topScores[2] = topScores[1];
+        topScores[1] = novoScore;
+    }
+    else if (ranking == 3) {
+        topScores[2] = novoScore;
+    }
 }
 
 
@@ -162,8 +169,13 @@ int main() {
     int intervaloSpawnAtual = INTERVALO_SPAWN_INICIAL;
     int proximoNivelPontuacao = PONTOS_PARA_SUBIR_NIVEL;
 
+    carregarHighScores(estado.topScores); 
+
     screenInit(1);
     keyboardInit();
+    
+    // (Correção do Stack Smashing 1/2)
+    int old_flags = fcntl(STDIN_FILENO, F_GETFL);
     fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 
     estado.rodando = 1;
@@ -180,8 +192,7 @@ int main() {
 
     // --- 2. Game Loop ---
     while (estado.rodando) {
-        
-        // --- 2.1 Processar Inputs ---
+        // ... (Loop principal do jogo - sem mudanças) ...
         char tecla = '\0';
         read(STDIN_FILENO, &tecla, 1); 
 
@@ -197,9 +208,6 @@ int main() {
             }
         }
         
-        // --- 2.2 Atualizar Lógica ---
-        
-        // (Gravidade do Pinguim)
         pinguim.velocidade_y = pinguim.velocidade_y + GRAVIDADE;
         pinguim.y = (int)(pinguim.y + pinguim.velocidade_y);
         if (pinguim.y >= PISO) {
@@ -209,7 +217,6 @@ int main() {
             pinguim.puloDuploDisponivel = 1;
         }
 
-        // (Atualiza Pontuação e Dificuldade)
         estado.pontuacao++; 
         if (estado.pontuacao > proximoNivelPontuacao) {
             if (estado.velocidadeJogo < 3.0f) { estado.velocidadeJogo += 0.2f; }
@@ -217,26 +224,21 @@ int main() {
             proximoNivelPontuacao += PONTOS_PARA_SUBIR_NIVEL;
         }
 
-        // (Lógica de Spawn)
         contadorSpawn++;
         if (contadorSpawn > intervaloSpawnAtual) {
-            // <-- MUDANÇA AQUI: Passa a pontuação para a função -->
             adicionarObstaculo(&estado.listaDeObstaculos, estado.pontuacao);
             contadorSpawn = 0;
         }
 
-        // (Mover Obstáculos e Limpar)
         NoObstaculo* atual = estado.listaDeObstaculos;
         NoObstaculo* anterior = NULL;
         while (atual != NULL) {
             atual->obstaculo->x -= (int)estado.velocidadeJogo; 
-
             if (atual->obstaculo->x + atual->obstaculo->largura < 0) {
                 NoObstaculo* noParaRemover = atual;
                 if (anterior == NULL) { estado.listaDeObstaculos = atual->proximo; }
                 else { anterior->proximo = atual->proximo; }
                 atual = atual->proximo; 
-                
                 free(noParaRemover->obstaculo);
                 free(noParaRemover);
             } else {
@@ -245,7 +247,6 @@ int main() {
             }
         }
 
-        // (Detecção de Colisão Robusta)
         atual = estado.listaDeObstaculos;
         while (atual != NULL) {
             Obstaculo* obs = atual->obstaculo;
@@ -255,39 +256,25 @@ int main() {
             int obsX_inicio = obs->x;
             int obsX_fim = obs->x + obs->largura;
             int obsY = obs->y;
-
-            if ( (obsX_inicio <= pinguimX) && 
-                 ((obsX_inicio + velocidadeInt) > pinguimX) ) 
-            {
-                if ( (obs->tipo == 0) && (pinguimY == obsY) ) { // Tipo 0 = Sólido (qualquer altura)
-                    estado.rodando = 0; // Game Over
+            if ( (obsX_inicio <= pinguimX) && ((obsX_inicio + velocidadeInt) > pinguimX) ) {
+                if ( (obs->tipo == 0) && (pinguimY == obsY) ) {
+                    estado.rodando = 0;
                 }
             }
-
             if (obs->tipo == 2) {
-                if ( (pinguimY == PISO) && 
-                     (pinguimX >= obsX_inicio) && 
-                     (pinguimX < obsX_fim) ) 
-                {
-                    estado.rodando = 0; // Game Over
+                if ( (pinguimY == PISO) && (pinguimX >= obsX_inicio) && (pinguimX < obsX_fim) ) {
+                    estado.rodando = 0;
                 }
             }
             atual = atual->proximo;
         }
-
         
-        // --- 2.3 Renderizar (Usando a Matriz Buffer) ---
         limparBuffer(telaBuffer);
 
-        // 1. Desenha Pinguim
         telaBuffer[pinguim.y][pinguim.x] = *pinguim.arteASCII; 
-
-        // 2. Desenha o Chão (PRIMEIRO)
         for (int x = 0; x < LARGURA_TELA; x++) {
             telaBuffer[PISO + 1][x] = '-';
         }
-
-        // 3. Desenha os Obstáculos (DEPOIS)
         atual = estado.listaDeObstaculos;
         while (atual != NULL) {
             Obstaculo* obs = atual->obstaculo;
@@ -300,16 +287,14 @@ int main() {
             atual = atual->proximo;
         }
         
-        // 4. Desenha a Pontuação (HUD)
         char hud[LARGURA_TELA];
-        sprintf(hud, "Pontos: %d | Velocidade: %.1f | Spawn a cada: %d (Aperte 'q')", 
-                estado.pontuacao, estado.velocidadeJogo, intervaloSpawnAtual);
+        sprintf(hud, "Pontos: %d | RECORDE: %s %d (Aperte 'q')", 
+                estado.pontuacao, estado.topScores[0].nome, estado.topScores[0].pontuacao);
                 
         for(int i = 0; hud[i] != '\0' && i < LARGURA_TELA; i++) {
             telaBuffer[0][i] = hud[i];
         }
 
-        // (Mensagem de Game Over)
         if (estado.rodando == 0) {
             char* gameOverMsg = "G A M E   O V E R";
             int startX = (LARGURA_TELA - strlen(gameOverMsg)) / 2;
@@ -319,19 +304,15 @@ int main() {
             }
         }
 
-        // 5. Imprime o Buffer
         imprimirBuffer(telaBuffer);
         
         if (estado.rodando == 0) {
             usleep(2000000); // Pausa por 2s
         }
-
-        // --- 2.4 Controle de "Frame Rate" ---
         usleep(33000); 
     }
 
     // --- 3. Finalização ---
-    // (Libera memória da lista encadeada)
     NoObstaculo* atual = estado.listaDeObstaculos; 
     while (atual != NULL) {
         NoObstaculo* proximo = atual->proximo;
@@ -343,7 +324,37 @@ int main() {
     screenDestroy();
     keyboardDestroy();
 
-    printf("Game Over! Pontuação Final: %d\n", estado.pontuacao);
+    // (Correção do Stack Smashing 2/2)
+    fcntl(STDIN_FILENO, F_SETFL, old_flags);
+
+    int ranking = obterRanking(estado.topScores, estado.pontuacao);
+
+    if (ranking > 0) {
+        printf("\n--- NOVO RECORDE! ---\n");
+        printf("Sua pontuação: %d\n", estado.pontuacao);
+        
+        if (ranking == 1) { printf("Você ficou em 1º LUGAR!\n"); }
+        else if (ranking == 2) { printf("Você ficou em 2º LUGAR!\n"); }
+        else { printf("Você ficou em 3º LUGAR!\n"); }
+
+        printf("Digite suas 3 iniciais (ex: LFG): ");
+        
+        char nome[10];
+        scanf("%3s", nome); // Agora o scanf vai funcionar
+        
+        adicionarNovoScore(estado.topScores, estado.pontuacao, nome, ranking);
+        salvarHighScores(estado.topScores);
+        
+        printf("Score salvo!\n");
+
+    } else {
+        printf("Game Over! Pontuação Final: %d\n", estado.pontuacao);
+    }
+    
+    printf("\n--- TOP 3 SCORES ---\n");
+    for (int i = 0; i < 3; i++) {
+        printf("%d. %s .... %d\n", i+1, estado.topScores[i].nome, estado.topScores[i].pontuacao);
+    }
 
     return 0;
 }
