@@ -1,39 +1,38 @@
-/*
- * ========================================
- * ARQUIVO DE CABEÇALHO: src/game.h (Versão Raylib)
- * ========================================
- * Este ficheiro define as estruturas e funções do nosso jogo.
- */
-
 #ifndef GAME_H
 #define GAME_H
 
-// Inclui a biblioteca Raylib (para tipos como Texture2D, Rectangle, etc.)
 #include "raylib.h"
+#include <stdbool.h> 
 
-// --- Requisito: Structs ---
+// --- Constantes ---
+#define INTERVALO_SPAWN_INICIAL 3.0f 
+#define PONTOS_PARA_SUBIR_NIVEL 200  
+#define INTERVALO_SPAWN_MINIMO 0.7f 
+#define PINGUIM_LARGURA 40 
+#define PINGUIM_ALTURA 40  
 
+
+// --- Structs ---
 typedef struct {
-    char nome[4]; // 3 letras + 1 caractere nulo '\0'
+    char nome[4];
     int pontuacao;
 } Score;
 
 typedef struct {
-    Vector2 position;     // Posição (x, y) - tipo da Raylib
+    Vector2 position;
     float velocidade_y;
     bool estaNoChao;
     bool puloDuploDisponivel;
-    Texture2D textura;    // <-- MUDANÇA: A imagem .png do pinguim
-    Rectangle hitbox;     // <-- MUDANÇA: O retângulo de colisão
+    Rectangle hitbox;
 } Pinguim;
 
 typedef struct {
-    Rectangle hitbox;     // <-- MUDANÇA: Posição (x,y) e tamanho (largura, altura)
-    int tipo;             // 0=Sólido (pedra, aéreo), 2=Buraco
-    Texture2D textura;    // <-- MUDANÇA: A imagem .png do obstáculo
+    Rectangle hitbox;
+    int tipo; 
+    Texture2D textura;
 } Obstaculo;
 
-// --- Requisito: Listas Encadeadas ---
+// --- Listas Encadeadas ---
 typedef struct NoObstaculo {
     Obstaculo* obstaculo;
     struct NoObstaculo* proximo;
@@ -47,40 +46,30 @@ typedef struct {
     NoObstaculo* listaDeObstaculos; 
     Score topScores[3];
     
-    // --- Novas variáveis de estado do Raylib ---
-    float contadorSpawn; // Contador de tempo (em segundos)
+    float contadorSpawn;
     float intervaloSpawnAtual;
     int proximoNivelPontuacao;
     
-    // --- Texturas (Imagens) ---
-    // Precisamos de carregar as imagens uma vez e usá-las várias vezes
-    Texture2D texPinguim;
+    // Texturas do Jogo
+    Texture2D texPinguimAndando;
+    Texture2D texPinguimPulando;
     Texture2D texObstaculoTerrestre;
     Texture2D texObstaculoAereo;
-    Texture2D texObstaculoVertical; // Para o 3#
+    Texture2D texObstaculoVertical;
     
 } EstadoJogo;
 
 
-/*
- * ========================================
- * FUNÇÕES (Protótipos)
- * ========================================
- * Estas são as funções que o nosso main.c vai chamar.
- * A lógica delas está no game.c
- */
+// --- Funções (Protótipos) ---
+void InitGame(EstadoJogo* estado, Pinguim* pinguim);
+void UpdateGame(EstadoJogo* estado, Pinguim* pinguim);
+void DrawGame(EstadoJogo* estado, Pinguim* pinguim);
+void UnloadGame(EstadoJogo* estado, Pinguim* pinguim); // Agora recebe Pinguim*
 
-// --- Funções Principais do Jogo ---
-void InitGame(EstadoJogo* estado, Pinguim* pinguim); // Inicializa o jogo, carrega texturas
-void UpdateGame(EstadoJogo* estado, Pinguim* pinguim); // Atualiza a física, inputs, lógica
-void DrawGame(EstadoJogo* estado, Pinguim* pinguim);   // Desenha tudo na tela
-void UnloadGame(EstadoJogo* estado); // Liberta a memória (texturas, lista encadeada)
-
-// --- Funções de Lógica (internas, chamadas por UpdateGame) ---
 void carregarHighScores(Score topScores[3]);
 void salvarHighScores(Score topScores[3]);
 int obterRanking(Score topScores[3], int pontuacaoAtual); 
 void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int ranking); 
-void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado); // Passa o estado para aceder às texturas
+void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado);
 
 #endif // GAME_H

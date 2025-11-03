@@ -52,7 +52,7 @@ int main(void) {
     }
 
     // Agora sim, limpa a memória e fecha a janela
-    UnloadGame(&estado);
+    UnloadGame(&estado,&pinguim);
     CloseAudioDevice();
     CloseWindow();
 

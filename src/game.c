@@ -1,34 +1,27 @@
 /*
  * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO ESTÁVEL - COLISÃO SIMPLES)
+ * ARQUIVO DE LÓGICA: src/game.c (VERSÃO COM DESENHO DO PINGUIM CONSERTADO)
  * ========================================
  */
 
 #include "game.h"
-#include <stdlib.h> // Para malloc, free, rand
-#include <string.h> // Para strcpy, memset
-#include <stdio.h>  // Para FILE, fopen, etc.
-#include <time.h>   // Para srand
+#include <stdlib.h> 
+#include <string.h> 
+#include <stdio.h>  
+#include <time.h>   
 
-// --- Constantes do Jogo ---
+// --- Constantes ---
 #define LARGURA_TELA 800
 #define ALTURA_TELA 450
 #define PISO (ALTURA_TELA - 40)
 #define GRAVIDADE 0.25f
-#define FORCA_PULO -8.0f
-
-// Constantes dos Obstáculos
+#define FORCA_PULO -8.0f 
 #define LARGURA_BURACO 80
 #define OBSTACULO_LARGURA 30
 #define OBSTACULO_ALTURA 30
-
-// Constantes de Dificuldade
-#define INTERVALO_SPAWN_INICIAL 3.0f // (O seu ajuste de spawn lento)
-#define PONTOS_PARA_SUBIR_NIVEL 200
-#define INTERVALO_SPAWN_MINIMO 0.7f
 #define ARQUIVO_SCORES "highscores.txt"
 
-// --- Funções de High Score (Lógica Pura - Sem Mudanças) ---
+// --- Funções de High Score ---
 void carregarHighScores(Score topScores[3]) {
     for (int i = 0; i < 3; i++) {
         strcpy(topScores[i].nome, "---");
@@ -66,7 +59,7 @@ void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int 
         topScores[2] = topScores[1];
         topScores[1] = topScores[0];
         topScores[0] = novoScore;
-    }
+    } 
     else if (ranking == 2) {
         topScores[2] = topScores[1];
         topScores[1] = novoScore;
@@ -98,8 +91,8 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         obsBaixo->hitbox.y = PISO - OBSTACULO_ALTURA;
         obsBaixo->hitbox.width = OBSTACULO_LARGURA;
         obsBaixo->hitbox.height = OBSTACULO_ALTURA;
-        obsBaixo->textura = estado->texObstaculoTerrestre;
-        obsBaixo->tipo = 0; // Sólido
+        obsBaixo->textura = estado->texObstaculoTerrestre; 
+        obsBaixo->tipo = 0;
         noBaixo->obstaculo = obsBaixo;
         noBaixo->proximo = *lista;
         *lista = noBaixo;
@@ -120,7 +113,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
     }
 
     Obstaculo* novoObs = (Obstaculo*)malloc(sizeof(Obstaculo));
-    if (novoObs == NULL) return;
+    if (novoObs == NULL) return; 
     NoObstaculo* novoNo = (NoObstaculo*)malloc(sizeof(NoObstaculo));
     if (novoNo == NULL) { free(novoObs); return; }
 
@@ -133,23 +126,21 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         novoObs->hitbox.height = OBSTACULO_ALTURA;
         novoObs->textura = estado->texObstaculoTerrestre;
         novoObs->tipo = 0;
-    }
+    } 
     else if (tipo == 1) { // Aéreo (Várias Alturas)
         novoObs->hitbox.width = OBSTACULO_LARGURA;
         novoObs->hitbox.height = OBSTACULO_ALTURA;
         novoObs->textura = estado->texObstaculoAereo;
         novoObs->tipo = 0;
-        
-        // (Ajuste da altura dos aéreos que você pediu)
         int alturaSorteada = rand() % 3;
         if (alturaSorteada == 0) { novoObs->hitbox.y = PISO - 120; }
         else if (alturaSorteada == 1) { novoObs->hitbox.y = PISO - 100; }
         else { novoObs->hitbox.y = PISO - 80; }
-    }
+    } 
     else if (tipo == 2) { // Buraco (Normal ou Grande)
-        novoObs->hitbox.y = PISO; // Posição Y do buraco
-        novoObs->hitbox.height = 40; // Altura do buraco (tamanho do chão)
-        novoObs->tipo = 2; // Buraco (tratado como colisão)
+        novoObs->hitbox.y = PISO; 
+        novoObs->hitbox.height = 40;
+        novoObs->tipo = 2; 
         novoObs->hitbox.width = (pontuacao > 650) ? (int)(LARGURA_BURACO * 1.5) : LARGURA_BURACO;
     }
     else if (tipo == 4) { // Terrestre 3# Vertical
@@ -166,16 +157,17 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
 }
 
 
-// --- Funções Principais do Jogo (Tradução para Raylib) ---
+// --- Funções Principais do Jogo ---
 
 void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     srand(time(NULL));
 
-    estado->texPinguim = LoadTexture("pinguim.png");
-    estado->texObstaculoTerrestre = LoadTexture("obstaculo_terrestre.png");
-    estado->texObstaculoAereo = LoadTexture("obstaculo_aereo.png");
-    estado->texObstaculoVertical = LoadTexture("obstaculo_vertical.png");
-
+    estado->texPinguimAndando = LoadTexture("imagens_jogo/pengoo/pengoo_surfando.png");
+    estado->texPinguimPulando = LoadTexture("imagens_jogo/pengoo/pengoo_pulando.png");
+    estado->texObstaculoTerrestre = LoadTexture("imagens_jogo/inimigos/obstaculo_terrestre.png");
+    estado->texObstaculoAereo = LoadTexture("imagens_jogo/inimigos/obstaculo_aereo.png");
+    estado->texObstaculoVertical = LoadTexture("imagens_jogo/inimigos/obstaculo_vertical.png");
+    
     estado->rodando = true;
     estado->pontuacao = 0;
     estado->velocidadeJogo = 2.5f;
@@ -184,22 +176,19 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->intervaloSpawnAtual = INTERVALO_SPAWN_INICIAL;
     estado->proximoNivelPontuacao = PONTOS_PARA_SUBIR_NIVEL;
 
-    pinguim->position = (Vector2){ 50, PISO - 32 };
+    pinguim->position = (Vector2){ 50, PISO - PINGUIM_ALTURA };
     pinguim->velocidade_y = 0;
     pinguim->estaNoChao = true;
     pinguim->puloDuploDisponivel = true;
-    pinguim->textura = estado->texPinguim;
-    pinguim->hitbox = (Rectangle){ 50, pinguim->position.y, 32, 32 };
+    pinguim->hitbox = (Rectangle){ 50, pinguim->position.y, PINGUIM_LARGURA, PINGUIM_ALTURA };
 
     carregarHighScores(estado->topScores);
 }
 
 
-// <-- MUDANÇA: LÓGICA DE FÍSICA E COLISÃO REVERTIDA PARA A VERSÃO ESTÁVEL -->
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
     if (!estado->rodando) return;
 
-    // --- 1. Inputs ---
     if (IsKeyPressed(KEY_Q)) {
         estado->rodando = false;
     }
@@ -214,20 +203,33 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
         }
     }
 
-    // --- 2. Física da Gravidade (Lógica Antiga) ---
     pinguim->velocidade_y += GRAVIDADE;
     pinguim->position.y += pinguim->velocidade_y;
     pinguim->hitbox.y = pinguim->position.y;
 
-    // (Trava o pinguim no chão)
     if (pinguim->position.y >= PISO - pinguim->hitbox.height) {
-        pinguim->position.y = PISO - pinguim->hitbox.height;
-        pinguim->velocidade_y = 0;
-        pinguim->estaNoChao = true;
-        pinguim->puloDuploDisponivel = true;
+        bool pinguimSobreBuraco = false;
+        NoObstaculo* atual = estado->listaDeObstaculos;
+        while (atual != NULL) {
+            if (atual->obstaculo->tipo == 2) { 
+                if (CheckCollisionRecs(pinguim->hitbox, atual->obstaculo->hitbox)) {
+                    pinguimSobreBuraco = true;
+                    break;
+                }
+            }
+            atual = atual->proximo;
+        }
+
+        if (!pinguimSobreBuraco) {
+            pinguim->position.y = PISO - pinguim->hitbox.height;
+            pinguim->velocidade_y = 0;
+            pinguim->estaNoChao = true;
+            pinguim->puloDuploDisponivel = true;
+        }
     }
 
-    // --- 3. Atualiza Pontuação e Dificuldade ---
+    if (pinguim->position.y > ALTURA_TELA) { estado->rodando = false; }
+
     estado->pontuacao++;
     if (estado->pontuacao > estado->proximoNivelPontuacao) {
         if (estado->velocidadeJogo < 10.0f) { estado->velocidadeJogo += 0.5f; }
@@ -235,14 +237,12 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
         estado->proximoNivelPontuacao += PONTOS_PARA_SUBIR_NIVEL;
     }
 
-    // --- 4. Lógica de Spawn ---
     estado->contadorSpawn += GetFrameTime();
     if (estado->contadorSpawn >= estado->intervaloSpawnAtual) {
         adicionarObstaculo(&estado->listaDeObstaculos, estado->pontuacao, estado);
         estado->contadorSpawn = 0.0f;
     }
 
-    // --- 5. Mover Obstáculos e Limpar Lista ---
     NoObstaculo* atual = estado->listaDeObstaculos;
     NoObstaculo* anterior = NULL;
     while (atual != NULL) {
@@ -261,20 +261,16 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
         }
     }
 
-    // --- 6. Colisão (Lógica Antiga, que funciona) ---
     atual = estado->listaDeObstaculos;
     while (atual != NULL) {
         Obstaculo* obs = atual->obstaculo;
         
-        // Colisão com Sólidos (Tipo 0)
         if (obs->tipo == 0) {
             if (CheckCollisionRecs(pinguim->hitbox, obs->hitbox)) {
                 estado->rodando = false; 
             }
         }
-        // Colisão com Buraco (Tipo 2)
         else if (obs->tipo == 2) {
-            // Se o pinguim ESTÁ NO CHÃO e toca o buraco, ele morre.
             if (pinguim->estaNoChao && CheckCollisionRecs(pinguim->hitbox, obs->hitbox)) {
                 estado->rodando = false; 
             }
@@ -284,39 +280,45 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
 }
 
 
-// --- Função de Desenho (sem mudanças) ---
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     BeginDrawing();
 
-    ClearBackground(RAYWHITE);
+    ClearBackground(SKYBLUE); 
     
-    // Desenha o chão preto
     DrawRectangle(0, PISO, LARGURA_TELA, 40, BLACK);
     
-    // Desenha o pinguim preto (placeholder)
-    DrawRectangleRec(pinguim->hitbox, BLACK);
+    // --- MUDANÇA AQUI: NOVO CÁLCULO PARA DRAWTEXTUREPRO ---
+    Texture2D texAtual = pinguim->estaNoChao ? estado->texPinguimAndando : estado->texPinguimPulando;
+    
+    // Source rectangle (pega a imagem inteira da textura)
+    Rectangle sourceRect = { 0.0f, 0.0f, (float)texAtual.width, (float)texAtual.height }; 
+    
+    // Destination rectangle (onde a textura será desenhada no mundo do jogo, com nosso tamanho fixo)
+    Rectangle destRect = { pinguim->position.x, pinguim->position.y, (float)PINGUIM_LARGURA, (float)PINGUIM_ALTURA };
+    
+    Vector2 origin = { 0, 0 };
+    float rotation = 0.0f; 
+    
+    DrawTexturePro(texAtual, sourceRect, destRect, origin, rotation, WHITE);
 
-    // Desenha os obstáculos
+    // Desenha os obstáculos (placeholders)
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {
         Obstaculo* obs = atual->obstaculo;
-        if (obs->tipo == 0) { // Sólido
+        if (obs->tipo == 0) { 
             DrawRectangleRec(obs->hitbox, BLACK);
         }
-        else if (obs->tipo == 2) { // Buraco
-            // Desenha um retângulo BRANCO para "apagar" o chão
+        else if (obs->tipo == 2) { 
             DrawRectangleRec(obs->hitbox, RAYWHITE); 
         }
         atual = atual->proximo;
     }
 
-    // Desenha o HUD
     char hud[200];
     sprintf(hud, "Pontos: %d | Velocidade: %.1f | RECORDE: %s %d",
             estado->pontuacao, estado->velocidadeJogo, estado->topScores[0].nome, estado->topScores[0].pontuacao);
     DrawText(hud, 10, 10, 20, BLACK);
 
-    // Mensagem de Game Over
     if (!estado->rodando) {
         DrawText("G A M E   O V E R", LARGURA_TELA/2 - MeasureText("G A M E   O V E R", 40)/2, ALTURA_TELA/2 - 20, 40, RED);
     }
@@ -325,13 +327,13 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
 }
 
 
-// --- Função de Limpeza (sem mudanças) ---
-void UnloadGame(EstadoJogo* estado) {
-    UnloadTexture(estado->texPinguim);
+void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
+    UnloadTexture(estado->texPinguimAndando);
+    UnloadTexture(estado->texPinguimPulando);
     UnloadTexture(estado->texObstaculoTerrestre);
     UnloadTexture(estado->texObstaculoAereo);
     UnloadTexture(estado->texObstaculoVertical);
-
+    
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {
         NoObstaculo* proximo = atual->proximo;
