@@ -1,3 +1,9 @@
+/*
+ * ========================================
+ * ARQUIVO DE CABEÇALHO: src/game.h (CORREÇÃO DE ERROS FINAIS)
+ * ========================================
+ */
+
 #ifndef GAME_H
 #define GAME_H
 
@@ -8,9 +14,10 @@
 #define INTERVALO_SPAWN_INICIAL 3.0f 
 #define PONTOS_PARA_SUBIR_NIVEL 200  
 #define INTERVALO_SPAWN_MINIMO 0.7f 
-#define PINGUIM_LARGURA 40 
-#define PINGUIM_ALTURA 40  
-
+#define PINGUIM_LARGURA_BASE 40
+#define PINGUIM_ALTURA_BASE 48
+#define OBSTACULO_LARGURA_BASE 40 
+#define OBSTACULO_ALTURA_BASE 40 
 
 // --- Structs ---
 typedef struct {
@@ -24,6 +31,10 @@ typedef struct {
     bool estaNoChao;
     bool puloDuploDisponivel;
     Rectangle hitbox;
+    // <-- CORREÇÃO: Adicionamos as texturas de volta ao Pinguim -->
+    Texture2D texAndando; 
+    Texture2D texPulando;
+    // -------------------------------------------------------------
 } Pinguim;
 
 typedef struct {
@@ -50,7 +61,9 @@ typedef struct {
     float intervaloSpawnAtual;
     int proximoNivelPontuacao;
     
-    // Texturas do Jogo
+    RenderTexture2D target; 
+    
+    // Texturas do Jogo (Mantidas para o UnloadGame)
     Texture2D texPinguimAndando;
     Texture2D texPinguimPulando;
     Texture2D texObstaculoTerrestre;
@@ -64,7 +77,7 @@ typedef struct {
 void InitGame(EstadoJogo* estado, Pinguim* pinguim);
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim);
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim);
-void UnloadGame(EstadoJogo* estado, Pinguim* pinguim); // Agora recebe Pinguim*
+void UnloadGame(EstadoJogo* estado, Pinguim* pinguim); 
 
 void carregarHighScores(Score topScores[3]);
 void salvarHighScores(Score topScores[3]);
