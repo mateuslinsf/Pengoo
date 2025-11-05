@@ -1,23 +1,26 @@
 /*
  * ========================================
- * ARQUIVO PRINCIPAL: src/main.c (TELA CHEIA E ESCALA)
+ * ARQUIVO PRINCIPAL: src/main.c (VERSÃO FINAL COM RESIZE E RENDERIZACAO CORRETA)
  * ========================================
  */
+
 #include "raylib.h"
-#include "game.h"
+#include "game.h" 
 #include <stdio.h> 
 #include <unistd.h> 
 #include <fcntl.h> 
-#include <math.h> // Para a função fmin
+#include <math.h> // Para a função fminf
+#include <string.h> // Para a função strcpy
 
 // Tamanho fixo de renderização (tamanho virtual do jogo)
-#define GAME_WIDTH 800
-#define GAME_HEIGHT 450
+#define GAME_VIRTUAL_WIDTH 800
+#define GAME_VIRTUAL_HEIGHT 450
+
 
 int main(void) {
     
     // Configurações iniciais
-    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_FULLSCREEN_MODE); // Inicia no modo Fullscreen
+    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_FULLSCREEN_MODE);
     
     // Inicia a janela na resolução do monitor primário
     int monitor = GetCurrentMonitor();
@@ -34,8 +37,8 @@ int main(void) {
     Pinguim pinguim = { 0 };
 
     // Cria o Target (Canvas 800x450)
-    estado.target = LoadRenderTexture(GAME_WIDTH, GAME_HEIGHT);
-    SetTextureFilter(estado.target.texture, TEXTURE_FILTER_BILINEAR); // Para um bom redimensionamento
+    estado.target = LoadRenderTexture(GAME_VIRTUAL_WIDTH, GAME_VIRTUAL_HEIGHT);
+    SetTextureFilter(estado.target.texture, TEXTURE_FILTER_BILINEAR); 
 
     InitGame(&estado, &pinguim);
 
@@ -61,14 +64,14 @@ int main(void) {
             ClearBackground(BLACK); // Barras pretas laterais
             
             // Calcula a escala para caber na tela mantendo a proporção (Letterbox)
-            float scale = fminf((float)GetScreenWidth() / GAME_WIDTH, (float)GetScreenHeight() / GAME_HEIGHT);
-            int offsetX = (GetScreenWidth() - ((int)GAME_WIDTH * scale)) / 2;
-            int offsetY = (GetScreenHeight() - ((int)GAME_HEIGHT * scale)) / 2;
+            float scale = fminf((float)GetScreenWidth() / GAME_VIRTUAL_WIDTH, (float)GetScreenHeight() / GAME_VIRTUAL_HEIGHT);
+            int offsetX = (GetScreenWidth() - ((int)GAME_VIRTUAL_WIDTH * scale)) / 2;
+            int offsetY = (GetScreenHeight() - ((int)GAME_VIRTUAL_HEIGHT * scale)) / 2;
             
             // Desenha o target esticado na tela real
             DrawTexturePro(estado.target.texture, 
                            (Rectangle){ 0.0f, 0.0f, (float)estado.target.texture.width, (float)-estado.target.texture.height }, 
-                           (Rectangle){ (float)offsetX, (float)offsetY, (float)GAME_WIDTH * scale, (float)GAME_HEIGHT * scale }, 
+                           (Rectangle){ (float)offsetX, (float)offsetY, (float)GAME_VIRTUAL_WIDTH * scale, (float)GAME_VIRTUAL_HEIGHT * scale }, 
                            (Vector2){ 0, 0 }, 0.0f, WHITE);
         EndDrawing();
         // ---------------------------------------------------------------------
