@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COMPLETA E CORRIGIDA)
+ * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL ESTÁVEL COM LIMITE DE DIFICULDADE)
  * ========================================
  */
 
@@ -69,22 +69,19 @@ void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int 
 
 // --- Funções da Lista Encadeada (Obstáculos) ---
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) {
+    int tipo = 0;
     
-    int tipo = 0; // Inicializa com um valor seguro
-
-    // --- Lógica de Spawn do Power-Up (Prioridade Máxima) ---
-    if (pontuacao >= PONTUACAO_MINIMA_POWERUP && estado->power_up_aereo_counter >= CICLE_SPAWN_POWERUP - 1) {
-        tipo = 5; // Tipo 5 é Power-up
-        estado->power_up_aereo_counter = 0; // Reseta o contador
-    } 
-    // --- Lógica de Spawn Normal (Se não for Power-Up) ---
+    // 1. Prioridade: Power-Up Imortalidade (Aéreo)
+    if (pontuacao >= PONTUACAO_MINIMA_IMORTALIDADE && estado->power_up_aereo_counter >= CICLE_SPAWN_IMORTALIDADE) {
+        tipo = 5; // Imortalidade (Amarelo)
+        estado->power_up_aereo_counter = 0;
+    }
+    // 2. Spawn Normal
     else {
-        // Decide se é um obstáculo pré-650 ou pós-650
         if (pontuacao < 650) {
             tipo = rand() % 4; // 0, 1, 2, 3
         } else {
-            // Pós-650: Aumenta a variedade (e inclui o tipo 4 - Terrestre 3#)
-            tipo = rand() % 5; // 0, 1, 2, 3, 4
+            tipo = rand() % 5; // 0, 1, 2, 3, 4 (Pós-650)
         }
     }
 
@@ -120,6 +117,8 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         noCima->obstaculo = obsCima;
         noCima->proximo = *lista;
         *lista = noCima;
+        
+        if (tipo < 5) estado->power_up_terrestre_counter++; // Conta spawn se for obstáculo
         return;
     }
 
@@ -129,36 +128,32 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
     if (novoNo == NULL) { free(novoObs); return; }
 
     novoObs->hitbox.x = LARGURA_TELA + 5;
-    novoObs->tipo = tipo;
+    novoObs->tipo = 0; 
 
     if (tipo == 0) { // Terrestre (Simples 1#)
         novoObs->hitbox.y = PISO - obsAltura;
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
         novoObs->textura = estado->texObstaculoTerrestre;
-        novoObs->tipo = 0;
+        if (tipo < 5) estado->power_up_terrestre_counter++; // Conta spawn se for obstáculo
     } 
     else if (tipo == 1) { // Aéreo (Várias Alturas)
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
         novoObs->textura = estado->texObstaculoAereo;
-        novoObs->tipo = 0;
         
-        // --- NOVO: Conta apenas se for o AÉREO (tipo 1) ---
-        estado->power_up_aereo_counter++; 
-        // ---------------------------------------------------
+        estado->power_up_aereo_counter++; // Conta o spawn aéreo
 
         int alturaSorteada = rand() % 3;
         if (alturaSorteada == 0) { novoObs->hitbox.y = PISO - 120; }
         else if (alturaSorteada == 1) { novoObs->hitbox.y = PISO - 100; }
         else { novoObs->hitbox.y = PISO - 80; }
     } 
-    else if (tipo == 2) { // Buraco (Normal ou Grande)
+    else if (tipo == 2) { // Buraco 
         novoObs->hitbox.y = PISO; 
         novoObs->hitbox.height = 40;
-        novoObs->tipo = 2; 
+        novoObs->tipo = 2; // Buraco
         
-        // Buracos de 4x ou 5x o tamanho do bloco (40px)
         int buracoLargura = LARGURA_BURACO_BLOCO * OBSTACULO_LARGURA_BASE; 
         if (pontuacao > 650) {
             buracoLargura = (LARGURA_BURACO_BLOCO + 1) * OBSTACULO_LARGURA_BASE; 
@@ -172,17 +167,25 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         novoObs->hitbox.height = obsAltura;
         novoObs->textura = estado->texObstaculoVertical;
         novoObs->tipo = 0;
+        if (tipo < 5) estado->power_up_terrestre_counter++; // Conta spawn se for obstáculo
     }
-    else if (tipo == 5) { // Power-Up de Imortalidade (Prioridade)
+    else if (tipo == 5) { // Power-Up Imortalidade (Aéreo)
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
-        novoObs->textura = estado->texPowerUp; 
-        novoObs->tipo = 1; // Tipo 1 = Power-up (Coletável)
+        novoObs->textura = estado->texPowerUpImortal; 
+        novoObs->tipo = 1; // Power-up
         
         int alturaSorteada = rand() % 3;
         if (alturaSorteada == 0) { novoObs->hitbox.y = PISO - 140; }
         else if (alturaSorteada == 1) { novoObs->hitbox.y = PISO - 120; }
         else { novoObs->hitbox.y = PISO - 100; }
+    }
+    else if (tipo == 6) { // Tipo 6 (Fallback para não quebrar)
+        novoObs->hitbox.y = PISO - obsAltura;
+        novoObs->hitbox.width = obsLargura;
+        novoObs->hitbox.height = obsAltura;
+        novoObs->textura = estado->texObstaculoTerrestre; // Fallback
+        novoObs->tipo = 0; 
     }
 
 
@@ -192,12 +195,12 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
 }
 
 
-// --- Funções Principais do Jogo (Ajuste de Altura e Init) ---
+// --- Funções Principais do Jogo ---
 
 void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     srand(time(NULL));
 
-    // Carrega texturas (caminhos finais)
+    // Carrega texturas
     estado->texPinguimAndando = LoadTexture("imagens_jogo/pengoo/pengoo_surfando.png");
     estado->texPinguimPulando = LoadTexture("imagens_jogo/pengoo/pengoo_pulando.png");
     estado->texObstaculoTerrestre = LoadTexture("imagens_jogo/inimigos/obstaculo_terrestre_1x1.png");
@@ -205,7 +208,7 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->texObstaculoVertical = LoadTexture("imagens_jogo/inimigos/obstaculo_terrestre_3x1.png");
     
     // Carrega Texturas Douradas e Power-Up
-    estado->texPowerUp = LoadTexture("imagens_jogo/inimigos/powerup_invencivel.png"); 
+    estado->texPowerUpImortal = LoadTexture("imagens_jogo/inimigos/powerup_invencivel.png"); 
     estado->texPinguimGoldAndando = LoadTexture("imagens_jogo/pengoo/pengoogold_surfando.png");
     estado->texPinguimGoldPulando = LoadTexture("imagens_jogo/pengoo/pengoogold_pulando.png");
     
@@ -215,7 +218,7 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     SetTextureFilter(estado->texObstaculoTerrestre, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(estado->texObstaculoAereo, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(estado->texObstaculoVertical, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(estado->texPowerUp, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(estado->texPowerUpImortal, TEXTURE_FILTER_BILINEAR); 
     SetTextureFilter(estado->texPinguimGoldAndando, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(estado->texPinguimGoldPulando, TEXTURE_FILTER_BILINEAR);
     
@@ -223,29 +226,29 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->rodando = true;
     estado->pontuacao = 0;
     estado->velocidadeJogo = 2.5f;
+    estado->velocidadeBase = 2.5f;
     estado->listaDeObstaculos = NULL;
     
     estado->contadorSpawn = 0.0f;
     estado->intervaloSpawnAtual = INTERVALO_SPAWN_INICIAL;
     estado->proximoNivelPontuacao = PONTOS_PARA_SUBIR_NIVEL;
     estado->power_up_aereo_counter = 0;
+    estado->power_up_terrestre_counter = 0;
 
-    // Inicializa o Pinguim (posição e hitbox)
-    // CORREÇÃO: Posição Y deve ser PISO - ALTURA_BASE
+    // Inicializa o Pinguim
     pinguim->position = (Vector2){ 50, PISO - PINGUIM_ALTURA_BASE };
     pinguim->velocidade_y = 0;
     pinguim->estaNoChao = true;
-    pinguim->puloDuploDisponivel = true;
+    pinguim->puloMaximo = 2;
     
     pinguim->texAndando = estado->texPinguimAndando;
     pinguim->texPulando = estado->texPinguimPulando;
     pinguim->texGoldAndando = estado->texPinguimGoldAndando;
     pinguim->texGoldPulando = estado->texPinguimGoldPulando;
     
-    pinguim->imortal = false;
-    pinguim->imortal_distancia_restante = 0;
+    pinguim->imortal_ativo = false; 
+    pinguim->habilidade_distancia_restante = 0;
     
-    // Hitbox: 50x55 pixels
     pinguim->hitbox = (Rectangle){ 50, pinguim->position.y, PINGUIM_LARGURA_BASE, PINGUIM_ALTURA_BASE };
 
     carregarHighScores(estado->topScores);
@@ -260,10 +263,12 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
         if (pinguim->estaNoChao) {
             pinguim->velocidade_y = FORCA_PULO;
             pinguim->estaNoChao = false;
-            pinguim->puloDuploDisponivel = true;
-        } else if (pinguim->puloDuploDisponivel) {
-            pinguim->velocidade_y = FORCA_PULO;
-            pinguim->puloDuploDisponivel = false;
+            pinguim->puloMaximo = 2; // Pulo Duplo
+        } else {
+            if (pinguim->puloMaximo > 1) {
+                pinguim->velocidade_y = FORCA_PULO;
+                pinguim->puloMaximo--;
+            }
         }
     }
 
@@ -271,7 +276,6 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
     pinguim->position.y += pinguim->velocidade_y;
     pinguim->hitbox.y = pinguim->position.y;
 
-    // Lógica de pouso usa a constante correta
     if (pinguim->position.y >= PISO - PINGUIM_ALTURA_BASE) {
         bool pinguimSobreBuraco = false;
         NoObstaculo* atual = estado->listaDeObstaculos;
@@ -286,29 +290,38 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
         }
 
         if (!pinguimSobreBuraco) {
-            pinguim->position.y = PISO - PINGUIM_ALTURA_BASE; // Trava na altura correta
+            pinguim->position.y = PISO - PINGUIM_ALTURA_BASE;
             pinguim->velocidade_y = 0;
             pinguim->estaNoChao = true;
-            pinguim->puloDuploDisponivel = true;
-        } 
+            pinguim->puloMaximo = 2;
+        } else {
+             pinguim->estaNoChao = false;
+        }
     }
 
     if (pinguim->position.y > ALTURA_TELA) { estado->rodando = false; }
 
     estado->pontuacao++;
     
-    // Lógica de Duração da Imortalidade
-    if (pinguim->imortal) {
-        pinguim->imortal_distancia_restante--;
-        if (pinguim->imortal_distancia_restante <= 0) {
-            pinguim->imortal = false;
+    if (pinguim->imortal_ativo) {
+        pinguim->habilidade_distancia_restante--;
+        if (pinguim->habilidade_distancia_restante <= 0) {
+            pinguim->imortal_ativo = false;
         }
     }
     
     if (estado->pontuacao > estado->proximoNivelPontuacao) {
         if (estado->velocidadeJogo < 10.0f) { estado->velocidadeJogo += 0.5f; }
-        if (estado->intervaloSpawnAtual > INTERVALO_SPAWN_MINIMO) { estado->intervaloSpawnAtual -= 0.1f; }
-        estado->proximoNivelPontuacao += PONTOS_PARA_SUBIR_NIVEL;
+        // CORREÇÃO: Lógica de aceleração infinita (Hardcore Mode)
+        if (estado->intervaloSpawnAtual > INTERVALO_SPAWN_MINIMO) { 
+            estado->intervaloSpawnAtual -= 0.1f; 
+        }
+        
+        if (estado->proximoNivelPontuacao < 3000) {
+            estado->proximoNivelPontuacao += PONTOS_PARA_SUBIR_NIVEL; // +200
+        } else {
+            estado->proximoNivelPontuacao += 2000; // +2000 (Hardcore)
+        }
     }
 
     estado->contadorSpawn += GetFrameTime();
@@ -322,7 +335,7 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
     while (atual != NULL) {
         atual->obstaculo->hitbox.x -= estado->velocidadeJogo;
 
-        if (atual->obstaculo->hitbox.x + atual->obstaculo->hitbox.width < 0) {
+        if (atual->obstaculo->hitbox.x + atual->obstaculo->hitbox.width < 0 || atual->obstaculo->tipo == -1) {
             NoObstaculo* noParaRemover = atual;
             if (anterior == NULL) { estado->listaDeObstaculos = atual->proximo; }
             else { anterior->proximo = atual->proximo; }
@@ -337,28 +350,27 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
 
     atual = estado->listaDeObstaculos;
     while (atual != NULL) {
-        Obstaculo* obs = atual->obstaculo;
-        
-        if (obs->tipo == 1) { 
-             if (CheckCollisionRecs(pinguim->hitbox, obs->hitbox)) {
-                pinguim->imortal = true;
-                pinguim->imortal_distancia_restante = DISTANCIA_IMORTALIDADE;
-                obs->tipo = -1; // Marca para remoção
-             }
-        }
-        
-        if (obs->tipo == 0) { 
-            if (CheckCollisionRecs(pinguim->hitbox, obs->hitbox)) {
-                if (!pinguim->imortal) {
-                    estado->rodando = false; // Game Over
+        if (CheckCollisionRecs(pinguim->hitbox, atual->obstaculo->hitbox)) {
+            
+            if (atual->obstaculo->tipo == 1) { // Power-Up
+                
+                // Ativa a imortalidade
+                pinguim->imortal_ativo = true;
+                pinguim->habilidade_distancia_restante = DISTANCIA_HABILIDADE;
+                atual->obstaculo->tipo = -1; 
+                
+            }
+            else if (atual->obstaculo->tipo == 0) { 
+                if (!pinguim->imortal_ativo) {
+                    estado->rodando = false; 
                 } else {
-                    obs->tipo = -1; // Marca para remoção
+                    atual->obstaculo->tipo = -1; 
                 }
             }
-        }
-        else if (obs->tipo == 2) {
-            if (pinguim->estaNoChao && CheckCollisionRecs(pinguim->hitbox, obs->hitbox)) {
-                estado->rodando = false; 
+            else if (atual->obstaculo->tipo == 2) {
+                if (pinguim->estaNoChao) {
+                    estado->rodando = false; 
+                }
             }
         }
         
@@ -376,7 +388,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     // Desenha o Pinguim
     Texture2D texAtual;
     
-    if (pinguim->imortal) {
+    if (pinguim->imortal_ativo) {
         texAtual = pinguim->estaNoChao ? estado->texPinguimGoldAndando : estado->texPinguimGoldPulando;
     } else {
         texAtual = pinguim->estaNoChao ? estado->texPinguimAndando : estado->texPinguimPulando;
@@ -390,7 +402,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     
     DrawTexturePro(texAtual, sourceRect, destRect, origin, rotation, WHITE);
 
-    // Desenha os obstáculos (com fallback)
+    // Desenha os obstáculos
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {
         Obstaculo* obs = atual->obstaculo;
@@ -418,11 +430,11 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
 
     // Texto do HUD
     char hud[200];
-    char imortal_status[30] = "";
+    char imortal_status[40] = "";
     
-    if (pinguim->imortal) {
-        sprintf(imortal_status, " | IMORTAL! (%d)", pinguim->imortal_distancia_restante);
-    }
+    if (pinguim->imortal_ativo) {
+        sprintf(imortal_status, " | IMORTAL! (%d)", pinguim->habilidade_distancia_restante);
+    } 
     
     sprintf(hud, "Pontos: %d | Velocidade: %.1f%s | RECORDE: %s %d",
             estado->pontuacao, estado->velocidadeJogo, imortal_status, estado->topScores[0].nome, estado->topScores[0].pontuacao);
@@ -441,7 +453,7 @@ void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
     UnloadTexture(estado->texObstaculoTerrestre);
     UnloadTexture(estado->texObstaculoAereo);
     UnloadTexture(estado->texObstaculoVertical);
-    UnloadTexture(estado->texPowerUp);
+    UnloadTexture(estado->texPowerUpImortal);
     UnloadTexture(estado->texPinguimGoldAndando);
     UnloadTexture(estado->texPinguimGoldPulando);
     

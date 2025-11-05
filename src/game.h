@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO DE CABEÇALHO: src/game.h (VERSÃO FINAL DE JOGABILIDADE)
+ * ARQUIVO DE CABEÇALHO: src/game.h (VERSÃO FINAL SINCRONIZADA)
  * ========================================
  */
 
@@ -10,7 +10,7 @@
 #include "raylib.h"
 #include <stdbool.h> 
 
-// --- Constantes de Jogo ---
+// --- Constantes ---
 #define INTERVALO_SPAWN_INICIAL 3.0f 
 #define PONTOS_PARA_SUBIR_NIVEL 200  
 #define INTERVALO_SPAWN_MINIMO 0.7f 
@@ -26,10 +26,10 @@
 // Largura do buraco (4 e 5 blocos)
 #define LARGURA_BURACO_BLOCO 4 
 
-// --- NOVAS CONSTANTES DO POWER-UP ---
-#define PONTUACAO_MINIMA_POWERUP 2000
-#define CICLE_SPAWN_POWERUP 5
-#define DISTANCIA_IMORTALIDADE 500
+// --- NOVAS CONSTANTES DO POWER-UP (SÓ IMORTALIDADE) ---
+#define PONTUACAO_MINIMA_IMORTALIDADE 2000
+#define CICLE_SPAWN_IMORTALIDADE 5
+#define DISTANCIA_HABILIDADE 500
 // ------------------------------------
 
 
@@ -40,58 +40,63 @@ typedef struct {
 } Score;
 
 typedef struct {
-    Vector2 position;
-    float velocidade_y;
-    bool estaNoChao;
-    bool puloDuploDisponivel;
     Rectangle hitbox;
-    
-    bool imortal;
-    int imortal_distancia_restante;
-
-    Texture2D texAndando; 
-    Texture2D texPulando;
-    Texture2D texGoldAndando;
-    Texture2D texGoldPulando;
-} Pinguim;
-
-typedef struct {
-    Rectangle hitbox;
-    int tipo; 
+    int tipo; // 0=Sólido, 1=Power-Up, 2=Buraco
     Texture2D textura;
 } Obstaculo;
 
-// --- Listas Encadeadas ---
+// --- Listas Encadeadas (Ordem Corrigida) ---
 typedef struct NoObstaculo {
     Obstaculo* obstaculo;
     struct NoObstaculo* proximo;
 } NoObstaculo;
+
+typedef struct {
+    Vector2 position;
+    float velocidade_y;
+    bool estaNoChao;
+    // CORREÇÃO: ADICIONAMOS O MEMBRO QUE FALTAVA
+    int puloMaximo; // 2 (normal)
+    // ----------------------------------------
+    
+    Rectangle hitbox;
+
+    bool imortal_ativo;
+    int habilidade_distancia_restante;
+
+    Texture2D texAndando;
+    Texture2D texPulando;
+    Texture2D texGoldAndando;
+    Texture2D texGoldPulando;
+} Pinguim;
 
 // --- Estrutura Principal do Jogo ---
 typedef struct {
     int pontuacao;
     bool rodando;
     float velocidadeJogo;
+    float velocidadeBase; 
     NoObstaculo* listaDeObstaculos; 
     Score topScores[3];
-    
+
     float contadorSpawn;
     float intervaloSpawnAtual;
     int proximoNivelPontuacao;
-    
-    RenderTexture2D target; 
-    
-    // Texturas do Jogo
+
+    RenderTexture2D target;
+
+    // Texturas
     Texture2D texPinguimAndando;
     Texture2D texPinguimPulando;
     Texture2D texObstaculoTerrestre;
     Texture2D texObstaculoAereo;
     Texture2D texObstaculoVertical;
-    Texture2D texPowerUp;
+    Texture2D texPowerUpImortal; 
     Texture2D texPinguimGoldAndando;
     Texture2D texPinguimGoldPulando;
-    
+
     int power_up_aereo_counter;
+    int power_up_terrestre_counter; 
     
 } EstadoJogo;
 
