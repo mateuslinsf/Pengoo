@@ -1,0 +1,20 @@
+#ifndef GAME_H
+#define GAME_H
+
+#include "raylib.h"
+#include <stdbool.h> 
+
+// --- Constantes ---
+#define INTERVALO_SPAWN_INICIAL 3.0f 
+#define PONTOS_PARA_SUBIR_NIVEL 200  
+#define INTERVALO_SPAWN_MINIMO 0.7f 
+
+// <-- MUDANÇA: Tamanho AUMENTADO do Pinguim (75x90) -->
+#define PINGUIM_LARGURA_BASE 75 
+#define PINGUIM_ALTURA_BASE 90
+// --------------------------------------------------------
+
+#define OBSTACULO_LARGURA_BASE 40 
+#define OBSTACULO_ALTURA_BASE 40 
+
+// ... (Resto do código permanece igual)
