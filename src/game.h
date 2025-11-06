@@ -1,9 +1,3 @@
-/*
- * ========================================
- * ARQUIVO DE CABEÇALHO: src/game.h (VERSÃO FINAL SINCRONIZADA)
- * ========================================
- */
-
 #ifndef GAME_H
 #define GAME_H
 
@@ -26,10 +20,18 @@
 // Largura do buraco (4 e 5 blocos)
 #define LARGURA_BURACO_BLOCO 4 
 
-// --- NOVAS CONSTANTES DO POWER-UP (SÓ IMORTALIDADE) ---
+// --- CONSTANTES DO POWER-UP IMORTALIDADE ---
 #define PONTUACAO_MINIMA_IMORTALIDADE 2000
 #define CICLE_SPAWN_IMORTALIDADE 5
-#define DISTANCIA_HABILIDADE 500
+#define DISTANCIA_IMORTALIDADE 500
+#define TIPO_IMORTAL 5 // Tipo usado na lógica de spawn
+// ------------------------------------
+
+// --- NOVAS CONSTANTES DO POWER-UP EVO (Pulo Triplo) ---
+#define PONTUACAO_MINIMA_EVO 2000
+#define CICLE_SPAWN_EVO 4      // O 5º (depois de 4) será o EVO
+#define DISTANCIA_EVO 500
+#define TIPO_EVO 6             // Novo tipo usado na lógica de spawn
 // ------------------------------------
 
 
@@ -41,8 +43,9 @@ typedef struct {
 
 typedef struct {
     Rectangle hitbox;
-    int tipo; // 0=Sólido, 1=Power-Up, 2=Buraco
+    int tipo; // 0=Sólido/Dano, 1=Power-Up Coletável, 2=Buraco
     Texture2D textura;
+    int id_power_up; // 1=Imortal, 2=Evo (Para diferenciar Power-ups com tipo=1)
 } Obstaculo;
 
 // --- Listas Encadeadas (Ordem Corrigida) ---
@@ -55,14 +58,15 @@ typedef struct {
     Vector2 position;
     float velocidade_y;
     bool estaNoChao;
-    // CORREÇÃO: ADICIONAMOS O MEMBRO QUE FALTAVA
-    int puloMaximo; // 2 (normal)
-    // ----------------------------------------
+    // puloMaximo: Pulos aéreos restantes (0, 1 ou 2)
+    int puloMaximo; 
     
     Rectangle hitbox;
 
-    bool imortal_ativo;
-    int habilidade_distancia_restante;
+    // Power-ups (VARIAVEIS INDEPENDENTES)
+    int imortal_distancia_restante; // Duração restante para Imortalidade (em pontos)
+    int evo_distancia_restante;     // Duração restante para Evo (Pulo Triplo)
+    bool imortal_ativo; // Flag para colisões (derivado de imortal_distancia_restante > 0)
 
     Texture2D texAndando;
     Texture2D texPulando;
@@ -91,11 +95,13 @@ typedef struct {
     Texture2D texObstaculoTerrestre;
     Texture2D texObstaculoAereo;
     Texture2D texObstaculoVertical;
-    Texture2D texPowerUpImortal; 
+    Texture2D texPowerUpImortal;
+    Texture2D texPowerUpEvo; // NOVA TEXTURA
     Texture2D texPinguimGoldAndando;
     Texture2D texPinguimGoldPulando;
 
     int power_up_aereo_counter;
+    // Contador para spawn do EVO (conta inimigos 1x1 terrestres após PONTUACAO_MINIMA_EVO)
     int power_up_terrestre_counter; 
     
 } EstadoJogo;
