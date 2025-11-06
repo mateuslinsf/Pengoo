@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO COM EVO E GOD MODE - CORREÇÃO FINAL DE PULOS)
+ * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM IMAGENS GOD E AJUSTES FINOS DE POSIÇÃO)
  * ========================================
  */
 
@@ -17,6 +17,9 @@
 #define GRAVIDADE 0.25f
 #define FORCA_PULO -8.0f 
 #define ARQUIVO_SCORES "highscores.txt"
+
+// Ajuste de Posição Vertical para Obstáculos Terrestres
+#define AJUSTE_VERTICAL 5
 
 // Redefinindo para o novo nome da constante para manter a compatibilidade
 #define DISTANCIA_HABILIDADE DISTANCIA_IMORTALIDADE 
@@ -77,12 +80,12 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
     
     // 1. Prioridade: Power-Up Imortalidade (Aéreo)
     if (pontuacao >= PONTUACAO_MINIMA_IMORTALIDADE && estado->power_up_aereo_counter >= CICLE_SPAWN_IMORTALIDADE) {
-        tipo = TIPO_IMORTAL; // 5 (Imortalidade - Amarelo)
+        tipo = TIPO_IMORTAL; // 5 (Imortalidade - Pelicano Gold)
         estado->power_up_aereo_counter = 0;
     }
     // 2. Prioridade: Power-Up Evo (Terrestre - pós 2000 pontos)
     else if (pontuacao >= PONTUACAO_MINIMA_EVO && estado->power_up_terrestre_counter >= CICLE_SPAWN_EVO) {
-        tipo = TIPO_EVO; // 6 (Evo - Roxo)
+        tipo = TIPO_EVO; // 6 (Evo - Pedra EVO)
         estado->power_up_terrestre_counter = 0;
     }
     // 3. Spawn Normal
@@ -98,39 +101,31 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
     int obsLargura = OBSTACULO_LARGURA_BASE;
     int obsAltura = OBSTACULO_ALTURA_BASE;
 
-    if (tipo == 3) { // Terrestre 2x1 (Spawna 2 blocos tipo 0)
-        obsAltura = OBSTACULO_ALTURA_BASE * 2;
+    // Se tipo == 3, criamos o Urso Polar (1x2)
+    if (tipo == 3) { 
         
-        // Bloco de baixo
-        Obstaculo* obsBaixo = (Obstaculo*)malloc(sizeof(Obstaculo));
-        NoObstaculo* noBaixo = (NoObstaculo*)malloc(sizeof(NoObstaculo));
-        if (obsBaixo == NULL || noBaixo == NULL) { return; }
-        obsBaixo->hitbox.x = LARGURA_TELA + 5;
-        obsBaixo->hitbox.y = PISO - OBSTACULO_ALTURA_BASE;
-        obsBaixo->hitbox.width = obsLargura;
-        obsBaixo->hitbox.height = OBSTACULO_ALTURA_BASE;
-        obsBaixo->textura = estado->texObstaculoTerrestre; 
-        obsBaixo->tipo = 0;
-        obsBaixo->id_power_up = 0; // Não é power-up
-        noBaixo->obstaculo = obsBaixo;
-        noBaixo->proximo = *lista;
-        *lista = noBaixo;
+        Obstaculo* novoObs = (Obstaculo*)malloc(sizeof(Obstaculo));
+        if (novoObs == NULL) return; 
+        NoObstaculo* novoNo = (NoObstaculo*)malloc(sizeof(NoObstaculo));
+        if (novoNo == NULL) { free(novoObs); return; }
 
-        // Bloco de cima
-        Obstaculo* obsCima = (Obstaculo*)malloc(sizeof(Obstaculo));
-        NoObstaculo* noCima = (NoObstaculo*)malloc(sizeof(NoObstaculo));
-        if (obsCima == NULL || noCima == NULL) { return; }
-        obsCima->hitbox.x = LARGURA_TELA + 5;
-        obsCima->hitbox.y = PISO - (OBSTACULO_ALTURA_BASE * 2);
-        obsCima->hitbox.width = obsLargura;
-        obsCima->hitbox.height = OBSTACULO_ALTURA_BASE;
-        obsCima->textura = estado->texObstaculoTerrestre;
-        obsCima->tipo = 0;
-        obsCima->id_power_up = 0; // Não é power-up
-        noCima->obstaculo = obsCima;
-        noCima->proximo = *lista;
-        *lista = noCima;
+        obsAltura = OBSTACULO_ALTURA_BASE * 2; // Urso é 1x2
+
+        novoObs->hitbox.x = LARGURA_TELA + 5;
+        // Posição ajustada: PISO - obsAltura + AJUSTE_VERTICAL
+        novoObs->hitbox.y = PISO - obsAltura + AJUSTE_VERTICAL; 
+        novoObs->hitbox.width = obsLargura;
+        novoObs->hitbox.height = obsAltura;
+        novoObs->textura = estado->texObstaculoTerrestre2x1; // Urso Polar
+        novoObs->tipo = 0; // Inimigo de dano
+        novoObs->id_power_up = 0; 
         
+        novoNo->obstaculo = novoObs;
+        novoNo->proximo = *lista;
+        *lista = novoNo;
+        
+        // Contagem para EVO se for obstáculo terrestre
+        if (pontuacao >= PONTUACAO_MINIMA_EVO) estado->power_up_terrestre_counter++;
         return;
     }
 
@@ -143,27 +138,30 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
     novoObs->tipo = 0; 
     novoObs->id_power_up = 0; // Inicializa como não Power-up
 
-    if (tipo == 0) { // Terrestre (Simples 1x1)
-        novoObs->hitbox.y = PISO - obsAltura;
+    if (tipo == 0) { // Terrestre (Simples 1x1: Pedra 1)
+        // Posição ajustada: PISO - obsAltura + AJUSTE_VERTICAL
+        novoObs->hitbox.y = PISO - obsAltura + AJUSTE_VERTICAL;
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
-        novoObs->textura = estado->texObstaculoTerrestre;
+        novoObs->textura = estado->texObstaculoTerrestre; // pedra1
         // CONTAGEM EVO: Apenas conta se for o inimigo 1x1 real E a pontuação for suficiente
         if (pontuacao >= PONTUACAO_MINIMA_EVO) estado->power_up_terrestre_counter++;
     } 
-    else if (tipo == 1) { // Aéreo (Várias Alturas)
+    else if (tipo == 1) { // Aéreo (Pelicano Normal)
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
-        novoObs->textura = estado->texObstaculoAereo;
+        novoObs->textura = estado->texObstaculoAereoNormal; // Pelicano
         
         estado->power_up_aereo_counter++; // Conta o spawn aéreo
 
         int alturaSorteada = rand() % 3;
+        // Posições aéreas NÃO são ajustadas
         if (alturaSorteada == 0) { novoObs->hitbox.y = PISO - 120; }
         else if (alturaSorteada == 1) { novoObs->hitbox.y = PISO - 100; }
         else { novoObs->hitbox.y = PISO - 80; }
     } 
     else if (tipo == 2) { // Buraco 
+        // Buraco começa no PISO, sem ajuste vertical
         novoObs->hitbox.y = PISO; 
         novoObs->hitbox.height = 40;
         novoObs->tipo = 2; // Buraco
@@ -174,18 +172,19 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         }
         novoObs->hitbox.width = buracoLargura;
     }
-    else if (tipo == 4) { // Terrestre 3# Vertical
+    else if (tipo == 4) { // Terrestre 3# Vertical (Pedra 3)
         obsAltura = OBSTACULO_ALTURA_BASE * 3;
-        novoObs->hitbox.y = PISO - obsAltura;
+        // Posição ajustada: PISO - obsAltura + 10 (do pedido anterior) + AJUSTE_VERTICAL
+        novoObs->hitbox.y = PISO - obsAltura + 10 + AJUSTE_VERTICAL; 
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
-        novoObs->textura = estado->texObstaculoVertical;
+        novoObs->textura = estado->texObstaculoVertical; // pedra3
         novoObs->tipo = 0;
     }
-    else if (tipo == TIPO_IMORTAL) { // Power-Up Imortalidade (Aéreo)
+    else if (tipo == TIPO_IMORTAL) { // Power-Up Imortalidade (Pelicano Gold)
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
-        novoObs->textura = estado->texPowerUpImortal; 
+        novoObs->textura = estado->texPowerUpImortal; // Pelicano Gold
         novoObs->tipo = 1; // Power-up (Coletável)
         novoObs->id_power_up = 1; // Imortal
         
@@ -194,13 +193,13 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         else if (alturaSorteada == 1) { novoObs->hitbox.y = PISO - 120; }
         else { novoObs->hitbox.y = PISO - 100; }
     }
-    else if (tipo == TIPO_EVO) { // Power-Up Evo (Terrestre)
+    else if (tipo == TIPO_EVO) { // Power-Up Evo (Terrestre: pedra1_evo)
         obsAltura = OBSTACULO_ALTURA_BASE;
-        novoObs->hitbox.y = PISO - obsAltura;
+        // Posição ajustada: PISO - obsAltura + AJUSTE_VERTICAL
+        novoObs->hitbox.y = PISO - obsAltura + AJUSTE_VERTICAL;
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
-        // Não carregamos uma textura específica, será desenhado como um bloco VIOLET/ROXO
-        novoObs->textura = estado->texPowerUpEvo; 
+        novoObs->textura = estado->texPowerUpEvo; // pedra1_evo
         novoObs->tipo = 1; // Power-up (Coletável)
         novoObs->id_power_up = 2; // Evo
     }
@@ -217,29 +216,46 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
 void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     srand(time(NULL));
 
-    // Carrega texturas
+    // Carrega texturas do Pinguim (Base, Gold, EVO)
     estado->texPinguimAndando = LoadTexture("imagens_jogo/pengoo/pengoo_surfando.png");
     estado->texPinguimPulando = LoadTexture("imagens_jogo/pengoo/pengoo_pulando.png");
-    estado->texObstaculoTerrestre = LoadTexture("imagens_jogo/inimigos/obstaculo_terrestre_1x1.png");
-    estado->texObstaculoAereo = LoadTexture("imagens_jogo/inimigos/obstaculo_aereo_1x1.png");
-    estado->texObstaculoVertical = LoadTexture("imagens_jogo/inimigos/obstaculo_terrestre_3x1.png");
-    
-    // Carrega Texturas Douradas e Power-Up
-    estado->texPowerUpImortal = LoadTexture("imagens_jogo/inimigos/powerup_invencivel.png"); 
-    estado->texPowerUpEvo = LoadTexture("imagens_jogo/inimigos/powerup_evo_placeholder.png"); // NOVA TEXTURA PLACEHOLDER
     estado->texPinguimGoldAndando = LoadTexture("imagens_jogo/pengoo/pengoogold_surfando.png");
     estado->texPinguimGoldPulando = LoadTexture("imagens_jogo/pengoo/pengoogold_pulando.png");
+    pinguim->texEvoAndando = LoadTexture("imagens_jogo/pengoo/pengooevo_surfando.png"); 
+    pinguim->texEvoPulando = LoadTexture("imagens_jogo/pengoo/pengooevo_pulando.png"); 
+    
+    // Carrega Texturas GOD (Movidas para EstadoJogo)
+    estado->texPinguimGodAndando = LoadTexture("imagens_jogo/pengoo/pengoogod_surfando.png");
+    estado->texPinguimGodPulando = LoadTexture("imagens_jogo/pengoo/pengoogod_pulando.png");
+    
+    // Atribui referências para a struct Pinguim (para uso no DrawGame)
+    pinguim->texGodAndando = estado->texPinguimGodAndando;
+    pinguim->texGodPulando = estado->texPinguimGodPulando;
+
+    // Carrega Texturas de Obstáculos e Power-Ups 
+    estado->texObstaculoTerrestre = LoadTexture("imagens_jogo/inimigos/pedra1.png"); // 1x1
+    estado->texObstaculoAereoNormal = LoadTexture("imagens_jogo/inimigos/pelicano.png"); // Pelicano Normal
+    estado->texObstaculoTerrestre2x1 = LoadTexture("imagens_jogo/inimigos/urso_polar.png"); // 2x1 (Urso Polar)
+    estado->texObstaculoVertical = LoadTexture("imagens_jogo/inimigos/pedra3.png"); // 3x1 (Pedra 3)
+    
+    estado->texPowerUpImortal = LoadTexture("imagens_jogo/inimigos/pelicanogold.png"); // Pelicano Gold (Imortal)
+    estado->texPowerUpEvo = LoadTexture("imagens_jogo/inimigos/pedra1_evo.png"); // Imagem EVO
     
     // Aplica filtro de qualidade
     SetTextureFilter(estado->texPinguimAndando, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(estado->texPinguimPulando, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(estado->texObstaculoTerrestre, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(estado->texObstaculoAereo, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(estado->texObstaculoAereoNormal, TEXTURE_FILTER_BILINEAR); 
+    SetTextureFilter(estado->texObstaculoTerrestre2x1, TEXTURE_FILTER_BILINEAR); 
     SetTextureFilter(estado->texObstaculoVertical, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(estado->texPowerUpImortal, TEXTURE_FILTER_BILINEAR); 
-    SetTextureFilter(estado->texPowerUpEvo, TEXTURE_FILTER_BILINEAR); // NOVO
+    SetTextureFilter(estado->texPowerUpEvo, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(estado->texPinguimGoldAndando, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(estado->texPinguimGoldPulando, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(pinguim->texEvoAndando, TEXTURE_FILTER_BILINEAR); 
+    SetTextureFilter(pinguim->texEvoPulando, TEXTURE_FILTER_BILINEAR); 
+    SetTextureFilter(estado->texPinguimGodAndando, TEXTURE_FILTER_BILINEAR); 
+    SetTextureFilter(estado->texPinguimGodPulando, TEXTURE_FILTER_BILINEAR); 
     
     // Inicialização de estado
     estado->rodando = true;
@@ -266,8 +282,8 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     pinguim->texGoldPulando = estado->texPinguimGoldPulando;
     
     pinguim->imortal_ativo = false; 
-    pinguim->imortal_distancia_restante = 0; // NOVO: Timer Imortal
-    pinguim->evo_distancia_restante = 0;     // NOVO: Timer Evo
+    pinguim->imortal_distancia_restante = 0; 
+    pinguim->evo_distancia_restante = 0;     
     
     pinguim->hitbox = (Rectangle){ 50, pinguim->position.y, PINGUIM_LARGURA_BASE, PINGUIM_ALTURA_BASE };
 
@@ -449,7 +465,6 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
 
     if (isGod) {
         strcpy(statusName, "GOD");
-        // Distância restante é o mínimo entre os dois (regra de fusão natural)
         remainingDistance = (pinguim->imortal_distancia_restante < pinguim->evo_distancia_restante)
                             ? pinguim->imortal_distancia_restante
                             : pinguim->evo_distancia_restante;
@@ -465,19 +480,34 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     // Desenha o Pinguim
     Texture2D texAtual;
     
-    if (isImortal || isGod) { // Pinguim Dourado (Imortal ou God)
-        texAtual = pinguim->estaNoChao ? estado->texPinguimGoldAndando : estado->texPinguimGoldPulando;
-    } else {
+    if (isGod) { // GOD (USA NOVA TEXTURA)
+        texAtual = pinguim->estaNoChao ? pinguim->texGodAndando : pinguim->texGodPulando;
+    } else if (isImortal) { // IMORTAL (Dourado)
+        texAtual = pinguim->estaNoChao ? pinguim->texGoldAndando : pinguim->texGoldPulando;
+    } else if (isEvo) { // EVO (EVO Padrão)
+        texAtual = pinguim->estaNoChao ? pinguim->texEvoAndando : pinguim->texEvoPulando;
+    } else { // Normal
         texAtual = pinguim->estaNoChao ? estado->texPinguimAndando : estado->texPinguimPulando;
     }
     
+    // Cor de renderização
+    Color tint = WHITE;
+    
+    // --- LÓGICA DE DESENHO PADRÃO (50x55) REVERTIDA ---
+    // Isto forçará a imagem 96x120 para 50x55.
     Rectangle sourceRect = { 0.0f, 0.0f, (float)texAtual.width, (float)texAtual.height }; 
-    Rectangle destRect = { pinguim->position.x, pinguim->position.y, (float)PINGUIM_LARGURA_BASE, (float)PINGUIM_ALTURA_BASE };
+    Rectangle destRect = { 
+        pinguim->position.x, 
+        pinguim->position.y, 
+        (float)PINGUIM_LARGURA_BASE, 
+        (float)PINGUIM_ALTURA_BASE 
+    };
+    // --------------------------------------------------
     
     Vector2 origin = { 0, 0 };
     float rotation = 0.0f; 
     
-    DrawTexturePro(texAtual, sourceRect, destRect, origin, rotation, WHITE);
+    DrawTexturePro(texAtual, sourceRect, destRect, origin, rotation, tint);
 
     // Desenha os obstáculos
     NoObstaculo* atual = estado->listaDeObstaculos;
@@ -486,28 +516,17 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
         
         if (obs->tipo == 0 || obs->tipo == 1) { // Sólido e Power-Up
             Texture2D obsTex = obs->textura;
-            Color fallbackColor = BLACK; // Default para inimigo
-            
-            if (obs->id_power_up == 1) { // Imortal
-                fallbackColor = YELLOW;
-            } else if (obs->id_power_up == 2) { // Evo
-                fallbackColor = VIOLET; // Roxo
-            }
             
             if (obsTex.id > 0) { 
-                // Se for EVO, desenha o retângulo VIOLET (Roxo) conforme pedido
-                if (obs->id_power_up == 2) {
-                     DrawRectangleRec(obs->hitbox, VIOLET);
-                } 
-                // Se for Imortal, desenha a textura normalmente (que é amarela/dourada)
-                else {
-                    DrawTexturePro(obsTex, 
-                                   (Rectangle){0, 0, (float)obsTex.width, (float)obsTex.height},
-                                   obs->hitbox, 
-                                   origin, rotation, WHITE);
-                }
+                DrawTexturePro(obsTex, 
+                               (Rectangle){0, 0, (float)obsTex.width, (float)obsTex.height},
+                               obs->hitbox, 
+                               origin, rotation, WHITE);
             } else {
-                // Fallback (inimigo preto, Imortal amarelo, EVO roxo)
+                // Fallback de cor, caso a textura não carregue (manter a compatibilidade)
+                Color fallbackColor = BLACK;
+                if (obs->id_power_up == 1) { fallbackColor = YELLOW; } 
+                else if (obs->id_power_up == 2) { fallbackColor = VIOLET; }
                 DrawRectangleRec(obs->hitbox, fallbackColor); 
             }
         }
@@ -540,13 +559,25 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
     UnloadTexture(estado->texPinguimAndando);
     UnloadTexture(estado->texPinguimPulando);
+    
+    // Descarrega texturas dos inimigos
     UnloadTexture(estado->texObstaculoTerrestre);
-    UnloadTexture(estado->texObstaculoAereo);
+    UnloadTexture(estado->texObstaculoAereoNormal); 
+    UnloadTexture(estado->texObstaculoTerrestre2x1); 
     UnloadTexture(estado->texObstaculoVertical);
-    UnloadTexture(estado->texPowerUpImortal);
-    UnloadTexture(estado->texPowerUpEvo); // NOVO
+    
+    // Descarrega texturas de Power-Up
+    UnloadTexture(estado->texPowerUpImortal); 
+    UnloadTexture(estado->texPowerUpEvo); 
+    
+    // Descarrega texturas de Pinguim
     UnloadTexture(estado->texPinguimGoldAndando);
     UnloadTexture(estado->texPinguimGoldPulando);
+    UnloadTexture(pinguim->texEvoAndando); 
+    UnloadTexture(pinguim->texEvoPulando); 
+    // Texturas GOD (Movidas para EstadoJogo para descarregamento)
+    UnloadTexture(estado->texPinguimGodAndando); 
+    UnloadTexture(estado->texPinguimGodPulando);   
     
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {

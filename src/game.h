@@ -72,6 +72,14 @@ typedef struct {
     Texture2D texPulando;
     Texture2D texGoldAndando;
     Texture2D texGoldPulando;
+
+    // Texturas EVO
+    Texture2D texEvoAndando; 
+    Texture2D texEvoPulando; 
+    
+    // Texturas GOD (Mantidas por ref. cruzada, inicializadas em InitGame)
+    Texture2D texGodAndando; 
+    Texture2D texGodPulando; 
 } Pinguim;
 
 // --- Estrutura Principal do Jogo ---
@@ -92,16 +100,26 @@ typedef struct {
     // Texturas
     Texture2D texPinguimAndando;
     Texture2D texPinguimPulando;
-    Texture2D texObstaculoTerrestre;
-    Texture2D texObstaculoAereo;
-    Texture2D texObstaculoVertical;
-    Texture2D texPowerUpImortal;
-    Texture2D texPowerUpEvo; // NOVA TEXTURA
+    
+    // Texturas de Inimigos 
+    Texture2D texObstaculoTerrestre; // pedra1.png (1x1)
+    Texture2D texObstaculoAereoNormal; // pelicano.png (Aéreo Normal)
+    Texture2D texObstaculoTerrestre2x1; // urso_polar.png (1x2)
+    Texture2D texObstaculoVertical; // pedra3.png (3x1)
+
+    // Texturas de Power-Up
+    Texture2D texPowerUpImortal; // pelicanogold.png (Imortal Power-up)
+    Texture2D texPowerUpEvo; // pedra1_evo.png (EVO Power-up)
+    
+    // Texturas de Pinguim Dourado/EVO/GOD
     Texture2D texPinguimGoldAndando;
     Texture2D texPinguimGoldPulando;
 
+    // Texturas God (Movidas aqui para Carregamento/Descarregamento seguro)
+    Texture2D texPinguimGodAndando; // NOVO
+    Texture2D texPinguimGodPulando; // NOVO
+
     int power_up_aereo_counter;
-    // Contador para spawn do EVO (conta inimigos 1x1 terrestres após PONTUACAO_MINIMA_EVO)
     int power_up_terrestre_counter; 
     
 } EstadoJogo;
