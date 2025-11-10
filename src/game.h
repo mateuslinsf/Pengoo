@@ -64,10 +64,11 @@ typedef struct {
     Rectangle hitbox;
 
     // Power-ups (VARIAVEIS INDEPENDENTES)
-    int imortal_distancia_restante; // Duração restante para Imortalidade (em pontos)
-    int evo_distancia_restante;     // Duração restante para Evo (Pulo Triplo)
-    bool imortal_ativo; // Flag para colisões (derivado de imortal_distancia_restante > 0)
+    int imortal_distancia_restante; 
+    int evo_distancia_restante;     
+    bool imortal_ativo; 
 
+    // Texturas - APENAS REFERENCIAM O ESTADO
     Texture2D texAndando;
     Texture2D texPulando;
     Texture2D texGoldAndando;
@@ -77,7 +78,7 @@ typedef struct {
     Texture2D texEvoAndando; 
     Texture2D texEvoPulando; 
     
-    // Texturas GOD (Mantidas por ref. cruzada, inicializadas em InitGame)
+    // Texturas GOD
     Texture2D texGodAndando; 
     Texture2D texGodPulando; 
 } Pinguim;
@@ -97,9 +98,15 @@ typedef struct {
 
     RenderTexture2D target;
 
-    // Texturas
+    // Texturas Pinguim (Todas carregadas aqui)
     Texture2D texPinguimAndando;
     Texture2D texPinguimPulando;
+    Texture2D texPinguimGoldAndando;
+    Texture2D texPinguimGoldPulando;
+    Texture2D texPinguimEvoAndando;
+    Texture2D texPinguimEvoPulando;
+    Texture2D texPinguimGodAndando; 
+    Texture2D texPinguimGodPulando; // NOVA: PARA T.PNG
     
     // Texturas de Inimigos 
     Texture2D texObstaculoTerrestre; // pedra1.png (1x1)
@@ -110,14 +117,6 @@ typedef struct {
     // Texturas de Power-Up
     Texture2D texPowerUpImortal; // pelicanogold.png (Imortal Power-up)
     Texture2D texPowerUpEvo; // pedra1_evo.png (EVO Power-up)
-    
-    // Texturas de Pinguim Dourado/EVO/GOD
-    Texture2D texPinguimGoldAndando;
-    Texture2D texPinguimGoldPulando;
-
-    // Texturas God (Movidas aqui para Carregamento/Descarregamento seguro)
-    Texture2D texPinguimGodAndando; // NOVO
-    Texture2D texPinguimGodPulando; // NOVO
 
     int power_up_aereo_counter;
     int power_up_terrestre_counter; 

@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM IMAGENS GOD E AJUSTES FINOS DE POSIÇÃO)
+ * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM SOLUÇÃO DE PROBLEMAS DE TEXTURA)
  * ========================================
  */
 
@@ -221,16 +221,15 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->texPinguimPulando = LoadTexture("imagens_jogo/pengoo/pengoo_pulando.png");
     estado->texPinguimGoldAndando = LoadTexture("imagens_jogo/pengoo/pengoogold_surfando.png");
     estado->texPinguimGoldPulando = LoadTexture("imagens_jogo/pengoo/pengoogold_pulando.png");
-    pinguim->texEvoAndando = LoadTexture("imagens_jogo/pengoo/pengooevo_surfando.png"); 
-    pinguim->texEvoPulando = LoadTexture("imagens_jogo/pengoo/pengooevo_pulando.png"); 
-    
-    // Carrega Texturas GOD (Movidas para EstadoJogo)
+    // Carregamento de EVO e GOD para EstadoJogo
+    estado->texPinguimEvoAndando = LoadTexture("imagens_jogo/pengoo/pengooevo_surfando.png"); 
+    estado->texPinguimEvoPulando = LoadTexture("imagens_jogo/pengoo/pengooevo_pulando.png"); 
     estado->texPinguimGodAndando = LoadTexture("imagens_jogo/pengoo/pengoogod_surfando.png");
-    estado->texPinguimGodPulando = LoadTexture("imagens_jogo/pengoo/pengoogod_pulando.png");
+    // PONTO FINAL: Carrega a nova imagem t.png
+    estado->texPinguimGodPulando = LoadTexture("imagens_jogo/pengoo/t.png"); 
     
-    // Atribui referências para a struct Pinguim (para uso no DrawGame)
-    pinguim->texGodAndando = estado->texPinguimGodAndando;
-    pinguim->texGodPulando = estado->texPinguimGodPulando;
+    // ATENÇÃO: As referências diretas de pinguim->tex... foram removidas da struct Pinguim no game.h.
+    // O DrawGame agora acessa diretamente a struct EstadoJogo.
 
     // Carrega Texturas de Obstáculos e Power-Ups 
     estado->texObstaculoTerrestre = LoadTexture("imagens_jogo/inimigos/pedra1.png"); // 1x1
@@ -241,21 +240,21 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->texPowerUpImortal = LoadTexture("imagens_jogo/inimigos/pelicanogold.png"); // Pelicano Gold (Imortal)
     estado->texPowerUpEvo = LoadTexture("imagens_jogo/inimigos/pedra1_evo.png"); // Imagem EVO
     
-    // Aplica filtro de qualidade
-    SetTextureFilter(estado->texPinguimAndando, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(estado->texPinguimPulando, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(estado->texObstaculoTerrestre, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(estado->texObstaculoAereoNormal, TEXTURE_FILTER_BILINEAR); 
-    SetTextureFilter(estado->texObstaculoTerrestre2x1, TEXTURE_FILTER_BILINEAR); 
-    SetTextureFilter(estado->texObstaculoVertical, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(estado->texPowerUpImortal, TEXTURE_FILTER_BILINEAR); 
-    SetTextureFilter(estado->texPowerUpEvo, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(estado->texPinguimGoldAndando, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(estado->texPinguimGoldPulando, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(pinguim->texEvoAndando, TEXTURE_FILTER_BILINEAR); 
-    SetTextureFilter(pinguim->texEvoPulando, TEXTURE_FILTER_BILINEAR); 
-    SetTextureFilter(estado->texPinguimGodAndando, TEXTURE_FILTER_BILINEAR); 
-    SetTextureFilter(estado->texPinguimGodPulando, TEXTURE_FILTER_BILINEAR); 
+    // Aplica filtro de qualidade (verificar se as IDs são válidas antes)
+    if (estado->texPinguimAndando.id > 0) SetTextureFilter(estado->texPinguimAndando, TEXTURE_FILTER_BILINEAR);
+    if (estado->texPinguimPulando.id > 0) SetTextureFilter(estado->texPinguimPulando, TEXTURE_FILTER_BILINEAR);
+    if (estado->texObstaculoTerrestre.id > 0) SetTextureFilter(estado->texObstaculoTerrestre, TEXTURE_FILTER_BILINEAR);
+    if (estado->texObstaculoAereoNormal.id > 0) SetTextureFilter(estado->texObstaculoAereoNormal, TEXTURE_FILTER_BILINEAR); 
+    if (estado->texObstaculoTerrestre2x1.id > 0) SetTextureFilter(estado->texObstaculoTerrestre2x1, TEXTURE_FILTER_BILINEAR); 
+    if (estado->texObstaculoVertical.id > 0) SetTextureFilter(estado->texObstaculoVertical, TEXTURE_FILTER_BILINEAR);
+    if (estado->texPowerUpImortal.id > 0) SetTextureFilter(estado->texPowerUpImortal, TEXTURE_FILTER_BILINEAR); 
+    if (estado->texPowerUpEvo.id > 0) SetTextureFilter(estado->texPowerUpEvo, TEXTURE_FILTER_BILINEAR);
+    if (estado->texPinguimGoldAndando.id > 0) SetTextureFilter(estado->texPinguimGoldAndando, TEXTURE_FILTER_BILINEAR);
+    if (estado->texPinguimGoldPulando.id > 0) SetTextureFilter(estado->texPinguimGoldPulando, TEXTURE_FILTER_BILINEAR);
+    if (estado->texPinguimEvoAndando.id > 0) SetTextureFilter(estado->texPinguimEvoAndando, TEXTURE_FILTER_BILINEAR); 
+    if (estado->texPinguimEvoPulando.id > 0) SetTextureFilter(estado->texPinguimEvoPulando, TEXTURE_FILTER_BILINEAR); 
+    if (estado->texPinguimGodAndando.id > 0) SetTextureFilter(estado->texPinguimGodAndando, TEXTURE_FILTER_BILINEAR); 
+    if (estado->texPinguimGodPulando.id > 0) SetTextureFilter(estado->texPinguimGodPulando, TEXTURE_FILTER_BILINEAR); 
     
     // Inicialização de estado
     estado->rodando = true;
@@ -275,11 +274,6 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     pinguim->velocidade_y = 0;
     pinguim->estaNoChao = true;
     pinguim->puloMaximo = 0; // 0 pulos aéreos restantes
-    
-    pinguim->texAndando = estado->texPinguimAndando;
-    pinguim->texPulando = estado->texPinguimPulando;
-    pinguim->texGoldAndando = estado->texPinguimGoldAndando;
-    pinguim->texGoldPulando = estado->texPinguimGoldPulando;
     
     pinguim->imortal_ativo = false; 
     pinguim->imortal_distancia_restante = 0; 
@@ -480,12 +474,13 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     // Desenha o Pinguim
     Texture2D texAtual;
     
-    if (isGod) { // GOD (USA NOVA TEXTURA)
-        texAtual = pinguim->estaNoChao ? pinguim->texGodAndando : pinguim->texGodPulando;
-    } else if (isImortal) { // IMORTAL (Dourado)
-        texAtual = pinguim->estaNoChao ? pinguim->texGoldAndando : pinguim->texGoldPulando;
-    } else if (isEvo) { // EVO (EVO Padrão)
-        texAtual = pinguim->estaNoChao ? pinguim->texEvoAndando : pinguim->texEvoPulando;
+    // --- Seleção de Textura ---
+    if (isGod) { 
+        texAtual = pinguim->estaNoChao ? estado->texPinguimGodAndando : estado->texPinguimGodPulando;
+    } else if (isImortal) { 
+        texAtual = pinguim->estaNoChao ? estado->texPinguimGoldAndando : estado->texPinguimGoldPulando;
+    } else if (isEvo) { 
+        texAtual = pinguim->estaNoChao ? estado->texPinguimEvoAndando : estado->texPinguimEvoPulando;
     } else { // Normal
         texAtual = pinguim->estaNoChao ? estado->texPinguimAndando : estado->texPinguimPulando;
     }
@@ -493,8 +488,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     // Cor de renderização
     Color tint = WHITE;
     
-    // --- LÓGICA DE DESENHO PADRÃO (50x55) REVERTIDA ---
-    // Isto forçará a imagem 96x120 para 50x55.
+    // Desenho Padrão (Força 50x55)
     Rectangle sourceRect = { 0.0f, 0.0f, (float)texAtual.width, (float)texAtual.height }; 
     Rectangle destRect = { 
         pinguim->position.x, 
@@ -502,7 +496,6 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
         (float)PINGUIM_LARGURA_BASE, 
         (float)PINGUIM_ALTURA_BASE 
     };
-    // --------------------------------------------------
     
     Vector2 origin = { 0, 0 };
     float rotation = 0.0f; 
@@ -551,7 +544,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     DrawText(hud, 10, 10, 20, BLACK);
 
     if (!estado->rodando) {
-        DrawText("G A M E    O V E R", LARGURA_TELA/2 - MeasureText("G A M E    O V E R", 40)/2, ALTURA_TELA/2 - 20, 40, RED);
+        DrawText("G A M E    O V E R", LARGURA_TELA/2 - MeasureText("G A M E    O V E R", 40)/2, ALTURA_TELA/2 - 20, 40, RED);
     }
 }
 
@@ -573,8 +566,8 @@ void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
     // Descarrega texturas de Pinguim
     UnloadTexture(estado->texPinguimGoldAndando);
     UnloadTexture(estado->texPinguimGoldPulando);
-    UnloadTexture(pinguim->texEvoAndando); 
-    UnloadTexture(pinguim->texEvoPulando); 
+    UnloadTexture(estado->texPinguimEvoAndando); 
+    UnloadTexture(estado->texPinguimEvoPulando); 
     // Texturas GOD (Movidas para EstadoJogo para descarregamento)
     UnloadTexture(estado->texPinguimGodAndando); 
     UnloadTexture(estado->texPinguimGodPulando);   
