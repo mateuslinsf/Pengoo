@@ -43,7 +43,7 @@ typedef struct {
 
 typedef struct {
     Rectangle hitbox;
-    int tipo; // 0=Sólido/Dano, 1=Power-Up Coletável, 2=Buraco
+    int tipo; // 0=Sólido/Dano, 1=Power-Up Coletável, 2=Buraco/Chão Quebrado
     Texture2D textura;
     int id_power_up; // 1=Imortal, 2=Evo (Para diferenciar Power-ups com tipo=1)
 } Obstaculo;
@@ -58,7 +58,6 @@ typedef struct {
     Vector2 position;
     float velocidade_y;
     bool estaNoChao;
-    // puloMaximo: Pulos aéreos restantes (0, 1 ou 2)
     int puloMaximo; 
     
     Rectangle hitbox;
@@ -67,20 +66,6 @@ typedef struct {
     int imortal_distancia_restante; 
     int evo_distancia_restante;     
     bool imortal_ativo; 
-
-    // Texturas - APENAS REFERENCIAM O ESTADO
-    Texture2D texAndando;
-    Texture2D texPulando;
-    Texture2D texGoldAndando;
-    Texture2D texGoldPulando;
-
-    // Texturas EVO
-    Texture2D texEvoAndando; 
-    Texture2D texEvoPulando; 
-    
-    // Texturas GOD
-    Texture2D texGodAndando; 
-    Texture2D texGodPulando; 
 } Pinguim;
 
 // --- Estrutura Principal do Jogo ---
@@ -106,7 +91,11 @@ typedef struct {
     Texture2D texPinguimEvoAndando;
     Texture2D texPinguimEvoPulando;
     Texture2D texPinguimGodAndando; 
-    Texture2D texPinguimGodPulando; // NOVA: PARA T.PNG
+    Texture2D texPinguimGodPulando; 
+
+    // Textura do Chão e Buraco (CENÁRIO)
+    Texture2D texChao; // chao.png
+    Texture2D texBuraco; // buraco.png (NOVO)
     
     // Texturas de Inimigos 
     Texture2D texObstaculoTerrestre; // pedra1.png (1x1)

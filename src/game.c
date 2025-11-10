@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM SOLUÇÃO DE PROBLEMAS DE TEXTURA)
+ * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM CHÃO QUEBRADO E MUDANÇA DE LÓGICA DO BURACO)
  * ========================================
  */
 
@@ -160,11 +160,12 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         else if (alturaSorteada == 1) { novoObs->hitbox.y = PISO - 100; }
         else { novoObs->hitbox.y = PISO - 80; }
     } 
-    else if (tipo == 2) { // Buraco 
-        // Buraco começa no PISO, sem ajuste vertical
+    else if (tipo == 2) { // Buraco/Chão Quebrado
+        // O hitbox deve estar onde o chão estaria.
         novoObs->hitbox.y = PISO; 
         novoObs->hitbox.height = 40;
-        novoObs->tipo = 2; // Buraco
+        novoObs->tipo = 2; // Buraco/Chão Quebrado (Dano)
+        novoObs->textura = estado->texBuraco; // Textura do chão quebrado
         
         int buracoLargura = LARGURA_BURACO_BLOCO * OBSTACULO_LARGURA_BASE; 
         if (pontuacao > 650) {
@@ -221,15 +222,14 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->texPinguimPulando = LoadTexture("imagens_jogo/pengoo/pengoo_pulando.png");
     estado->texPinguimGoldAndando = LoadTexture("imagens_jogo/pengoo/pengoogold_surfando.png");
     estado->texPinguimGoldPulando = LoadTexture("imagens_jogo/pengoo/pengoogold_pulando.png");
-    // Carregamento de EVO e GOD para EstadoJogo
     estado->texPinguimEvoAndando = LoadTexture("imagens_jogo/pengoo/pengooevo_surfando.png"); 
     estado->texPinguimEvoPulando = LoadTexture("imagens_jogo/pengoo/pengooevo_pulando.png"); 
     estado->texPinguimGodAndando = LoadTexture("imagens_jogo/pengoo/pengoogod_surfando.png");
-    // PONTO FINAL: Carrega a nova imagem t.png
     estado->texPinguimGodPulando = LoadTexture("imagens_jogo/pengoo/t.png"); 
     
-    // ATENÇÃO: As referências diretas de pinguim->tex... foram removidas da struct Pinguim no game.h.
-    // O DrawGame agora acessa diretamente a struct EstadoJogo.
+    // Carrega Textura do CHÃO (NOVO)
+    estado->texChao = LoadTexture("imagens_jogo/cenario/chao.png");
+    estado->texBuraco = LoadTexture("imagens_jogo/cenario/buraco.png"); // NOVO
 
     // Carrega Texturas de Obstáculos e Power-Ups 
     estado->texObstaculoTerrestre = LoadTexture("imagens_jogo/inimigos/pedra1.png"); // 1x1
@@ -255,6 +255,8 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     if (estado->texPinguimEvoPulando.id > 0) SetTextureFilter(estado->texPinguimEvoPulando, TEXTURE_FILTER_BILINEAR); 
     if (estado->texPinguimGodAndando.id > 0) SetTextureFilter(estado->texPinguimGodAndando, TEXTURE_FILTER_BILINEAR); 
     if (estado->texPinguimGodPulando.id > 0) SetTextureFilter(estado->texPinguimGodPulando, TEXTURE_FILTER_BILINEAR); 
+    if (estado->texChao.id > 0) SetTextureFilter(estado->texChao, TEXTURE_FILTER_BILINEAR); 
+    if (estado->texBuraco.id > 0) SetTextureFilter(estado->texBuraco, TEXTURE_FILTER_BILINEAR); // NOVO
     
     // Inicialização de estado
     estado->rodando = true;
@@ -408,7 +410,7 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
     while (atual != NULL) {
         if (CheckCollisionRecs(pinguim->hitbox, atual->obstaculo->hitbox)) {
             
-            if (atual->obstaculo->tipo == 1) { // Power-Up (tipo=1 para ambos EVO e IMORTAL)
+            if (atual->obstaculo->tipo == 1) { // Power-Up
                 
                 // --- Power-up IMORTAL (id_power_up == 1) ---
                 if (atual->obstaculo->id_power_up == 1) { 
@@ -431,10 +433,9 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
                     atual->obstaculo->tipo = -1; 
                 }
             }
-            else if (atual->obstaculo->tipo == 2) { // Buraco
-                if (pinguim->estaNoChao) {
-                    estado->rodando = false; 
-                }
+            else if (atual->obstaculo->tipo == 2) { // BURACO/CHÃO QUEBRADO (MORTE POR COLISÃO)
+                // Se pinguim colide com o hitbox do buraco (chão quebrado), ele morre.
+                estado->rodando = false; 
             }
         }
         
@@ -447,9 +448,25 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     
     ClearBackground(SKYBLUE); 
     
-    DrawRectangle(0, PISO, LARGURA_TELA, 40, BLACK);
+    // --- 1. Desenha o Chão (Chão agora usa a textura repetida) ---
+    int numTiles = LARGURA_TELA / OBSTACULO_LARGURA_BASE;
     
-    // --- Lógica de Status de Power-Up e Fusão GOD ---
+    if (estado->texChao.id > 0) {
+        // Repete a textura do chão em toda a largura
+        for (int i = 0; i < numTiles; i++) {
+            DrawTexturePro(estado->texChao, 
+                           (Rectangle){0, 0, (float)estado->texChao.width, (float)estado->texChao.height},
+                           (Rectangle){ (float)(i * OBSTACULO_LARGURA_BASE), PISO, (float)OBSTACULO_LARGURA_BASE, (float)OBSTACULO_ALTURA_BASE },
+                           (Vector2){0, 0}, 0.0f, WHITE);
+        }
+    } else {
+        // Fallback de cor preta se a textura não carregar
+        DrawRectangle(0, PISO, LARGURA_TELA, 40, BLACK);
+    }
+    // -----------------------------------------------------------
+
+
+    // --- 2. Desenha o Pinguim ---
     bool isImortal = pinguim->imortal_distancia_restante > 0;
     bool isEvo = pinguim->evo_distancia_restante > 0;
     bool isGod = isImortal && isEvo;
@@ -469,12 +486,10 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
         strcpy(statusName, "EVO");
         remainingDistance = pinguim->evo_distancia_restante;
     }
-    // ------------------------------------
 
-    // Desenha o Pinguim
     Texture2D texAtual;
     
-    // --- Seleção de Textura ---
+    // Seleção de Textura (Acessando diretamente EstadoJogo)
     if (isGod) { 
         texAtual = pinguim->estaNoChao ? estado->texPinguimGodAndando : estado->texPinguimGodPulando;
     } else if (isImortal) { 
@@ -502,7 +517,8 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     
     DrawTexturePro(texAtual, sourceRect, destRect, origin, rotation, tint);
 
-    // Desenha os obstáculos
+
+    // --- 3. Desenha os Obstáculos ---
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {
         Obstaculo* obs = atual->obstaculo;
@@ -523,14 +539,18 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
                 DrawRectangleRec(obs->hitbox, fallbackColor); 
             }
         }
-        else if (obs->tipo == 2) { // Buraco
-            DrawRectangleRec(obs->hitbox, RAYWHITE); 
+        else if (obs->tipo == 2) { // BURACO/CHÃO QUEBRADO
+             // Desenha o chão quebrado com a textura do buraco
+             DrawTexturePro(obs->textura, 
+                           (Rectangle){0, 0, (float)obs->textura.width, (float)obs->textura.height},
+                           obs->hitbox, 
+                           origin, rotation, WHITE);
         }
         
         atual = atual->proximo;
     }
 
-    // Texto do HUD
+    // --- 4. HUD ---
     char hud[200];
     char power_up_status[60] = ""; 
 
@@ -568,9 +588,12 @@ void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
     UnloadTexture(estado->texPinguimGoldPulando);
     UnloadTexture(estado->texPinguimEvoAndando); 
     UnloadTexture(estado->texPinguimEvoPulando); 
-    // Texturas GOD (Movidas para EstadoJogo para descarregamento)
     UnloadTexture(estado->texPinguimGodAndando); 
     UnloadTexture(estado->texPinguimGodPulando);   
+    
+    // Descarrega textura do CHÃO (NOVO)
+    UnloadTexture(estado->texChao); 
+    UnloadTexture(estado->texBuraco); // NOVO
     
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {
