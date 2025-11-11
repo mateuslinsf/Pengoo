@@ -15,9 +15,9 @@ O **Pengoo** é um game baseado no cliff jump (pou), em que o personagem princip
 
 ## Poderes do Pengo:
 
-<img src="imagens_jogo/pengoo/pengooevo_surfando.png" alt="Pengoevo_surfando" width="300"/> 
-<img src="imagens_jogo/pengoo/pengoogold_surfando.png" alt="Pengogold_surfando" width="300"/> 
-<img src="imagens_jogo/pengoo/pengoogod_surfando.png" alt="Pengogod_surfando" width="250"/> 
+<img src="imagens_jogo/pengoo/pengooevo_surfando.png" alt="Pengoevo_surfando" width="250"/> 
+<img src="imagens_jogo/pengoo/pengoogold_surfando.png" alt="Pengogold_surfando" width="250"/> 
+<img src="imagens_jogo/pengoo/pengoogod_surfando.png" alt="Pengogod_surfando" width="225"/> 
 
 ---
 
