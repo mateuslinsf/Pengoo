@@ -2,7 +2,7 @@
 
 ## Descrição do Projeto 🎮
 
-O **Pengoo** é um game baseado no cliff jump (pou), em que o personagem principal, Pengo, surfa em uma prancha e deve saltar e desviar de declives, obstáculos e  encostas, para coletar o máximo de peixes possível e evitar cair ou colidir.
+O **Pengoo** é um game baseado no cliff jump (pou), em que o personagem principal, Pengo, surfa em uma prancha e deve saltar e desviar de declives, obstáculos e  encostas para evitar cair ou colidir.
 
 ## Mecânicas do Game:
 
