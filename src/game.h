@@ -6,7 +6,7 @@
 
 // --- Constantes ---
 #define INTERVALO_SPAWN_INICIAL 3.0f 
-#define PONTOS_PARA_SUBIR_NIVEL 200  
+#define PONTOS_PARA_SUBIR_NIVEL 200 
 #define INTERVALO_SPAWN_MINIMO 0.7f 
 
 // Tamanho JOGÁVEL do Pinguim (50x55)
@@ -42,7 +42,7 @@
 typedef struct {
     Vector2 position;
     Color cor;
-    float raio; 
+    float raio; // MODIFICADO: Será usado como LARGURA da textura
     float velocidade; 
     bool ativa; 
 } Nuvem;
@@ -107,9 +107,10 @@ typedef struct {
     Texture2D texPinguimGodAndando; 
     Texture2D texPinguimGodPulando; 
 
-    // Textura do Chão e Buraco (CENÁRIO)
+    // Textura do CENÁRIO
     Texture2D texChao; // chao.png
-    Texture2D texBuraco; // buraco.png (NOVO)
+    Texture2D texBuraco; // buraco.png
+    Texture2D texNuvem; // nuvens.png (ADICIONADO)
     
     // Texturas de Inimigos 
     Texture2D texObstaculoTerrestre; // pedra1.png (1x1)

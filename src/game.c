@@ -1,14 +1,14 @@
 /*
  * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM CHÃO QUEBRADO E MUDANÇA DE LÓGICA DO BURACO)
+ * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM NUVENS DE TEXTURA)
  * ========================================
  */
 
 #include "game.h"
 #include <stdlib.h> 
 #include <string.h> 
-#include <stdio.h>  
-#include <time.h>   
+#include <stdio.h> 
+#include <time.h> 
 
 // --- Constantes do Jogo ---
 #define LARGURA_TELA 800
@@ -62,10 +62,11 @@ void InitNuvens(EstadoJogo* estado) {
         // Velocidade: entre 0.5f e 1.0f
         estado->nuvens[i].velocidade = VELOCIDADE_NUVEM + ((float)(rand() % 50) / 100.0f); 
         
-        // Raio: entre 10 e 19
-        estado->nuvens[i].raio = (float)(rand() % 10 + 10); 
+        // MODIFICADO: 'raio' agora representa a LARGURA da textura
+        // Tamanho: entre 50 e 79
+        estado->nuvens[i].raio = (float)(rand() % 30 + 50); 
         
-        // Cor: Branco acinzentado e semi-transparente
+        // Cor: Branco acinzentado e semi-transparente (Usado para TINT da textura)
         estado->nuvens[i].cor = (Color){ 200, 200, 200, 200 }; 
         
         // --- NOVO CÁLCULO DE POSIÇÃO X PARA GARANTIR ESPAÇAMENTO ---
@@ -260,9 +261,10 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->texPinguimGodAndando = LoadTexture("imagens_jogo/pengoo/pengoogod_surfando.png");
     estado->texPinguimGodPulando = LoadTexture("imagens_jogo/pengoo/t.png"); 
     
-    // Carrega Textura do CHÃO (NOVO)
+    // Carrega Textura do CENÁRIO
     estado->texChao = LoadTexture("imagens_jogo/cenario/chao.png");
-    estado->texBuraco = LoadTexture("imagens_jogo/cenario/buraco.png"); // NOVO
+    estado->texBuraco = LoadTexture("imagens_jogo/cenario/buraco.png"); 
+    estado->texNuvem = LoadTexture("imagens_jogo/cenario/nuvens.png"); // ADICIONADO
 
     // Carrega Texturas de Obstáculos e Power-Ups 
     estado->texObstaculoTerrestre = LoadTexture("imagens_jogo/inimigos/pedra1.png"); // 1x1
@@ -289,7 +291,8 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     if (estado->texPinguimGodAndando.id > 0) SetTextureFilter(estado->texPinguimGodAndando, TEXTURE_FILTER_BILINEAR); 
     if (estado->texPinguimGodPulando.id > 0) SetTextureFilter(estado->texPinguimGodPulando, TEXTURE_FILTER_BILINEAR); 
     if (estado->texChao.id > 0) SetTextureFilter(estado->texChao, TEXTURE_FILTER_BILINEAR); 
-    if (estado->texBuraco.id > 0) SetTextureFilter(estado->texBuraco, TEXTURE_FILTER_BILINEAR); // NOVO
+    if (estado->texBuraco.id > 0) SetTextureFilter(estado->texBuraco, TEXTURE_FILTER_BILINEAR); 
+    if (estado->texNuvem.id > 0) SetTextureFilter(estado->texNuvem, TEXTURE_FILTER_BILINEAR); // ADICIONADO
     
     // Inicialização de estado
     estado->rodando = true;
@@ -352,7 +355,8 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
             estado->nuvens[i].position.x -= estado->nuvens[i].velocidade;
 
             // Se a nuvem saiu da tela pela esquerda, reposicione-a na direita
-            if (estado->nuvens[i].position.x < -estado->nuvens[i].raio * 3) {
+            // MODIFICADO: Lógica de respawn usa 'raio' (largura)
+            if (estado->nuvens[i].position.x < -estado->nuvens[i].raio) {
                 // Respawn aleatório na direita, fora da tela
                 estado->nuvens[i].position.x = LARGURA_TELA + (float)(rand() % 100 + 50);
                 // Nova altura e velocidade aleatória
@@ -501,13 +505,26 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     ClearBackground(SKYBLUE); 
 
     // --- Desenha as Nuvens (No fundo, antes do chão) ---
+    // MODIFICADO: Troca DrawCircleV por DrawTexturePro
     for (int i = 0; i < NUM_NUVENS; i++) {
         Nuvem* nuvem = &estado->nuvens[i];
-        if (nuvem->ativa) {
-            // Desenha 3 círculos sobrepostos para simular uma nuvem pequena
-            DrawCircleV(nuvem->position, nuvem->raio, nuvem->cor);
-            DrawCircleV((Vector2){nuvem->position.x + nuvem->raio, nuvem->position.y}, nuvem->raio * 0.8f, nuvem->cor);
-            DrawCircleV((Vector2){nuvem->position.x - nuvem->raio * 0.5f, nuvem->position.y + nuvem->raio * 0.5f}, nuvem->raio * 0.9f, nuvem->cor);
+        if (nuvem->ativa && estado->texNuvem.id > 0) { // Verifica se a textura carregou
+            
+            // Usa o 'raio' como LARGURA e calcula a altura mantendo o aspecto da textura
+            float ratio = (float)estado->texNuvem.height / (float)estado->texNuvem.width;
+            float altura = nuvem->raio * ratio; // 'raio' agora é a largura
+
+            Rectangle sourceRect = { 0.0f, 0.0f, (float)estado->texNuvem.width, (float)estado->texNuvem.height };
+            Rectangle destRect = { nuvem->position.x, nuvem->position.y, nuvem->raio, altura };
+            Vector2 origin = { 0, 0 };
+
+            // Desenha a textura da nuvem com a cor/transparência definida em InitNuvens
+            DrawTexturePro(estado->texNuvem, 
+                         sourceRect,
+                         destRect,
+                         origin, 
+                         0.0f, 
+                         nuvem->cor); // Usa a cor original (branco-acinzentado, 200 alpha)
         }
     }
     
@@ -543,7 +560,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
                             ? pinguim->imortal_distancia_restante
                             : pinguim->evo_distancia_restante;
     } else if (isImortal) {
-        strcpy(statusName, "IMORTAL");
+        strcpy(statusName, "Gold");
         remainingDistance = pinguim->imortal_distancia_restante;
     } else if (isEvo) {
         strcpy(statusName, "EVO");
@@ -620,14 +637,13 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     if (isImortal || isEvo) {
         sprintf(power_up_status, " | %s! (%d)", statusName, remainingDistance);
     } 
-    
-    sprintf(hud, "Pontos: %d | Velocidade: %.1f%s | RECORDE: %s %d",
-            estado->pontuacao, estado->velocidadeJogo, power_up_status, estado->topScores[0].nome, estado->topScores[0].pontuacao);
+        sprintf(hud, "Pontos: %d | Velocidade: %.1f%s | RECORDE: %s %d",
+                estado->pontuacao, estado->velocidadeJogo, power_up_status, estado->topScores[0].nome, estado->topScores[0].pontuacao);
             
     DrawText(hud, 10, 10, 20, BLACK);
 
     if (!estado->rodando) {
-        DrawText("G A M E    O V E R", LARGURA_TELA/2 - MeasureText("G A M E    O V E R", 40)/2, ALTURA_TELA/2 - 20, 40, RED);
+        DrawText("G A M E   O V E R", LARGURA_TELA/2 - MeasureText("G A M E   O V E R", 40)/2, ALTURA_TELA/2 - 20, 40, RED);
     }
 }
 
@@ -654,9 +670,10 @@ void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
     UnloadTexture(estado->texPinguimGodAndando); 
     UnloadTexture(estado->texPinguimGodPulando);   
     
-    // Descarrega textura do CHÃO (NOVO)
+    // Descarrega textura do CENÁRIO
     UnloadTexture(estado->texChao); 
-    UnloadTexture(estado->texBuraco); // NOVO
+    UnloadTexture(estado->texBuraco); 
+    UnloadTexture(estado->texNuvem); // ADICIONADO
     
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {
