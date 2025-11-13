@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM NUVENS DE TEXTURA)
+ * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM NUVENS DE TEXTURA BRANCAS)
  * ========================================
  */
 
@@ -66,8 +66,10 @@ void InitNuvens(EstadoJogo* estado) {
         // Tamanho: entre 50 e 79
         estado->nuvens[i].raio = (float)(rand() % 30 + 50); 
         
-        // Cor: Branco acinzentado e semi-transparente (Usado para TINT da textura)
-        estado->nuvens[i].cor = (Color){ 200, 200, 200, 200 }; 
+        // *** CORREÇÃO AQUI ***
+        // Cor: WHITE (255, 255, 255, 255).
+        // Isso renderiza a textura .png com sua cor original.
+        estado->nuvens[i].cor = (Color){ 255, 255, 255, 255 }; // MUDADO DE {200, 200, 200, 200}
         
         // --- NOVO CÁLCULO DE POSIÇÃO X PARA GARANTIR ESPAÇAMENTO ---
         // Posição inicial: Começa em -200 (fora da tela esquerda) e espaça sequencialmente.
@@ -524,7 +526,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
                          destRect,
                          origin, 
                          0.0f, 
-                         nuvem->cor); // Usa a cor original (branco-acinzentado, 200 alpha)
+                         nuvem->cor); // Usa a cor (agora WHITE)
         }
     }
     
