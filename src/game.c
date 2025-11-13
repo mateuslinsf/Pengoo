@@ -48,6 +48,39 @@ void salvarHighScores(Score topScores[3]) {
     fclose(f);
 }
 
+
+// --- Funções de Nuvens ---
+void InitNuvens(EstadoJogo* estado) {
+    // Define um espaçamento horizontal médio para distribuir as 10 nuvens.
+    // O valor 150.0f é um espaçamento seguro para nuvens pequenas (LARGURA_TELA = 800).
+    const float ESPACAMENTO_MEDIO = 150.0f; 
+    
+    for (int i = 0; i < NUM_NUVENS; i++) {
+        
+        estado->nuvens[i].ativa = true; 
+        
+        // Velocidade: entre 0.5f e 1.0f
+        estado->nuvens[i].velocidade = VELOCIDADE_NUVEM + ((float)(rand() % 50) / 100.0f); 
+        
+        // Raio: entre 10 e 19
+        estado->nuvens[i].raio = (float)(rand() % 10 + 10); 
+        
+        // Cor: Branco acinzentado e semi-transparente
+        estado->nuvens[i].cor = (Color){ 200, 200, 200, 200 }; 
+        
+        // --- NOVO CÁLCULO DE POSIÇÃO X PARA GARANTIR ESPAÇAMENTO ---
+        // Posição inicial: Começa em -200 (fora da tela esquerda) e espaça sequencialmente.
+        // Adiciona um pequeno offset aleatório (-20 a +19) para evitar um alinhamento perfeito.
+        float offset_x = (float)(rand() % 40 - 20);
+        estado->nuvens[i].position.x = -200.0f + (float)i * ESPACAMENTO_MEDIO + offset_x;
+        
+        // Posição Y aleatória na metade superior da tela (céu)
+        // (ALTURA_TELA / 2 - 50) garante que não toque o pinguim ou o chão.
+        estado->nuvens[i].position.y = (float)(rand() % (ALTURA_TELA / 2 - 50)); 
+    }
+}
+
+
 int obterRanking(Score topScores[3], int pontuacaoAtual) {
     if (pontuacaoAtual > topScores[0].pontuacao) { return 1; }
     if (pontuacaoAtual > topScores[1].pontuacao) { return 2; }
@@ -284,6 +317,7 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     pinguim->hitbox = (Rectangle){ 50, pinguim->position.y, PINGUIM_LARGURA_BASE, PINGUIM_ALTURA_BASE };
 
     carregarHighScores(estado->topScores);
+    InitNuvens(estado);
 }
 
 
@@ -310,6 +344,24 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
             }
         }
     }
+
+    // --- Lógica de Movimento e Respawn das Nuvens ---
+    for (int i = 0; i < NUM_NUVENS; i++) {
+        if (estado->nuvens[i].ativa) {
+            // Move a nuvem para a esquerda
+            estado->nuvens[i].position.x -= estado->nuvens[i].velocidade;
+
+            // Se a nuvem saiu da tela pela esquerda, reposicione-a na direita
+            if (estado->nuvens[i].position.x < -estado->nuvens[i].raio * 3) {
+                // Respawn aleatório na direita, fora da tela
+                estado->nuvens[i].position.x = LARGURA_TELA + (float)(rand() % 100 + 50);
+                // Nova altura e velocidade aleatória
+                estado->nuvens[i].position.y = (float)(rand() % (ALTURA_TELA / 2 - 50)); 
+                estado->nuvens[i].velocidade = VELOCIDADE_NUVEM + ((float)(rand() % 50) / 100.0f);
+            }
+        }
+    }
+
 
     // Física
     pinguim->velocidade_y += GRAVIDADE;
@@ -447,6 +499,17 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     
     ClearBackground(SKYBLUE); 
+
+    // --- Desenha as Nuvens (No fundo, antes do chão) ---
+    for (int i = 0; i < NUM_NUVENS; i++) {
+        Nuvem* nuvem = &estado->nuvens[i];
+        if (nuvem->ativa) {
+            // Desenha 3 círculos sobrepostos para simular uma nuvem pequena
+            DrawCircleV(nuvem->position, nuvem->raio, nuvem->cor);
+            DrawCircleV((Vector2){nuvem->position.x + nuvem->raio, nuvem->position.y}, nuvem->raio * 0.8f, nuvem->cor);
+            DrawCircleV((Vector2){nuvem->position.x - nuvem->raio * 0.5f, nuvem->position.y + nuvem->raio * 0.5f}, nuvem->raio * 0.9f, nuvem->cor);
+        }
+    }
     
     // --- 1. Desenha o Chão (Chão agora usa a textura repetida) ---
     int numTiles = LARGURA_TELA / OBSTACULO_LARGURA_BASE;

@@ -34,6 +34,19 @@
 #define TIPO_EVO 6             // Novo tipo usado na lógica de spawn
 // ------------------------------------
 
+//--- Nuvens ---
+#define NUM_NUVENS 10//Máximo de nuvens na tela
+#define VELOCIDADE_NUVEM 0.5f//Velocidade horizontal lenta
+
+// --- Estruturas de Nuvens ---
+typedef struct {
+    Vector2 position;
+    Color cor;
+    float raio; 
+    float velocidade; 
+    bool ativa; 
+} Nuvem;
+
 
 // --- Structs ---
 typedef struct {
@@ -76,6 +89,7 @@ typedef struct {
     float velocidadeBase; 
     NoObstaculo* listaDeObstaculos; 
     Score topScores[3];
+    
 
     float contadorSpawn;
     float intervaloSpawnAtual;
@@ -109,6 +123,7 @@ typedef struct {
 
     int power_up_aereo_counter;
     int power_up_terrestre_counter; 
+    Nuvem nuvens[NUM_NUVENS];
     
 } EstadoJogo;
 
@@ -124,5 +139,6 @@ void salvarHighScores(Score topScores[3]);
 int obterRanking(Score topScores[3], int pontuacaoAtual); 
 void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int ranking); 
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado);
+void InitNuvens(EstadoJogo* estado);
 
 #endif // GAME_H
