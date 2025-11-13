@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM NUVENS DE TEXTURA BRANCAS)
+ * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM BÔNUS GOD)
  * ========================================
  */
 
@@ -66,10 +66,9 @@ void InitNuvens(EstadoJogo* estado) {
         // Tamanho: entre 50 e 79
         estado->nuvens[i].raio = (float)(rand() % 30 + 50); 
         
-        // *** CORREÇÃO AQUI ***
         // Cor: WHITE (255, 255, 255, 255).
         // Isso renderiza a textura .png com sua cor original.
-        estado->nuvens[i].cor = (Color){ 255, 255, 255, 255 }; // MUDADO DE {200, 200, 200, 200}
+        estado->nuvens[i].cor = (Color){ 255, 255, 255, 255 }; 
         
         // --- NOVO CÁLCULO DE POSIÇÃO X PARA GARANTIR ESPAÇAMENTO ---
         // Posição inicial: Começa em -200 (fora da tela esquerda) e espaça sequencialmente.
@@ -106,6 +105,19 @@ void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int 
     }
     else if (ranking == 3) {
         topScores[2] = novoScore;
+    }
+}
+
+// --- ADICIONADO: Função para centralizar o Game Over e calcular bônus ---
+void FinalizarJogo(EstadoJogo* estado) {
+    if (!estado->rodando) return; // Jogo já finalizado, não faz nada
+    
+    estado->rodando = false; // Para o jogo
+    
+    // Calcula o bônus APENAS UMA VEZ
+    if (!estado->bonusCalculado) {
+        estado->pontuacao += (estado->contGod * 500);
+        estado->bonusCalculado = true;
     }
 }
 
@@ -266,7 +278,7 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     // Carrega Textura do CENÁRIO
     estado->texChao = LoadTexture("imagens_jogo/cenario/chao.png");
     estado->texBuraco = LoadTexture("imagens_jogo/cenario/buraco.png"); 
-    estado->texNuvem = LoadTexture("imagens_jogo/cenario/nuvens.png"); // ADICIONADO
+    estado->texNuvem = LoadTexture("imagens_jogo/cenario/nuvens.png"); 
 
     // Carrega Texturas de Obstáculos e Power-Ups 
     estado->texObstaculoTerrestre = LoadTexture("imagens_jogo/inimigos/pedra1.png"); // 1x1
@@ -294,7 +306,7 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     if (estado->texPinguimGodPulando.id > 0) SetTextureFilter(estado->texPinguimGodPulando, TEXTURE_FILTER_BILINEAR); 
     if (estado->texChao.id > 0) SetTextureFilter(estado->texChao, TEXTURE_FILTER_BILINEAR); 
     if (estado->texBuraco.id > 0) SetTextureFilter(estado->texBuraco, TEXTURE_FILTER_BILINEAR); 
-    if (estado->texNuvem.id > 0) SetTextureFilter(estado->texNuvem, TEXTURE_FILTER_BILINEAR); // ADICIONADO
+    if (estado->texNuvem.id > 0) SetTextureFilter(estado->texNuvem, TEXTURE_FILTER_BILINEAR); 
     
     // Inicialização de estado
     estado->rodando = true;
@@ -308,6 +320,12 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->proximoNivelPontuacao = PONTOS_PARA_SUBIR_NIVEL;
     estado->power_up_aereo_counter = 0;
     estado->power_up_terrestre_counter = 0;
+
+    // --- ADICIONADO: Inicializa variáveis do Bônus GOD ---
+    estado->contGod = 0;
+    estado->godAtivoAnterior = false;
+    estado->bonusCalculado = false;
+    // --------------------------------------------------
 
     // Inicializa o Pinguim
     pinguim->position = (Vector2){ 50, PISO - PINGUIM_ALTURA_BASE };
@@ -398,7 +416,11 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
         }
     }
 
-    if (pinguim->position.y > ALTURA_TELA) { estado->rodando = false; }
+    // MODIFICADO: Chama a função de finalizar jogo
+    if (pinguim->position.y > ALTURA_TELA) { 
+        FinalizarJogo(estado);
+        return; // Retorna pois o jogo acabou
+    }
 
     estado->pontuacao++;
     
@@ -424,6 +446,20 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
 
     // Deriva a imortalidade para a lógica de colisão
     pinguim->imortal_ativo = pinguim->imortal_distancia_restante > 0;
+    
+    // --- ADICIONADO: Lógica do Contador GOD ---
+    bool isEvo = pinguim->evo_distancia_restante > 0;
+    bool isGod = pinguim->imortal_ativo && isEvo;
+
+    if (isGod && !estado->godAtivoAnterior) {
+        // O jogador acabou de ENTRAR no modo GOD
+        estado->contGod++;
+        estado->godAtivoAnterior = true;
+    } else if (!isGod) {
+        // Reseta o tracker se o modo GOD acabar
+        estado->godAtivoAnterior = false;
+    }
+    // ----------------------------------------
     
     // ... Restante da lógica de jogo (Spawn, Velocidade, Remoção de Obstáculos) permanece inalterada ...
     if (estado->pontuacao > estado->proximoNivelPontuacao) {
@@ -486,14 +522,15 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
             }
             else if (atual->obstaculo->tipo == 0) { // Inimigo/Dano
                 if (!pinguim->imortal_ativo) { 
-                    estado->rodando = false; 
+                    FinalizarJogo(estado); // MODIFICADO
+                    break; // Sai do loop de colisão pois o jogo acabou
                 } else {
                     atual->obstaculo->tipo = -1; 
                 }
             }
             else if (atual->obstaculo->tipo == 2) { // BURACO/CHÃO QUEBRADO (MORTE POR COLISÃO)
-                // Se pinguim colide com o hitbox do buraco (chão quebrado), ele morre.
-                estado->rodando = false; 
+                FinalizarJogo(estado); // MODIFICADO
+                break; // Sai do loop de colisão pois o jogo acabou
             }
         }
         
@@ -507,7 +544,6 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
     ClearBackground(SKYBLUE); 
 
     // --- Desenha as Nuvens (No fundo, antes do chão) ---
-    // MODIFICADO: Troca DrawCircleV por DrawTexturePro
     for (int i = 0; i < NUM_NUVENS; i++) {
         Nuvem* nuvem = &estado->nuvens[i];
         if (nuvem->ativa && estado->texNuvem.id > 0) { // Verifica se a textura carregou
@@ -526,7 +562,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
                          destRect,
                          origin, 
                          0.0f, 
-                         nuvem->cor); // Usa a cor (agora WHITE)
+                         nuvem->cor); // Usa a cor (WHITE)
         }
     }
     
@@ -644,8 +680,31 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim) {
             
     DrawText(hud, 10, 10, 20, BLACK);
 
+    // --- 5. TELA DE GAME OVER (MODIFICADO) ---
     if (!estado->rodando) {
-        DrawText("G A M E   O V E R", LARGURA_TELA/2 - MeasureText("G A M E   O V E R", 40)/2, ALTURA_TELA/2 - 20, 40, RED);
+        // Desenha o background escurecido
+        DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, (Color){ 0, 0, 0, 150 });
+        
+        DrawText("G A M E   O V E R", LARGURA_TELA/2 - MeasureText("G A M E   O V E R", 40)/2, ALTURA_TELA/2 - 60, 40, RED);
+        
+        // Prepara os textos do score
+        // A pontuação total já foi calculada em FinalizarJogo()
+        int bonusGod = (estado->contGod * 500);
+        int pontuacaoBase = estado->pontuacao - bonusGod;
+        
+        char textoScoreBase[100];
+        char textoBonus[100];
+        char textoTotal[100];
+
+        sprintf(textoScoreBase, "Pontuacao Base: %d", pontuacaoBase);
+        sprintf(textoBonus, "Bonus GOD (x%d): %d", estado->contGod, bonusGod);
+        sprintf(textoTotal, "TOTAL: %d", estado->pontuacao);
+        
+        // Centraliza os textos
+        int y_start = ALTURA_TELA/2 - 10;
+        DrawText(textoScoreBase, LARGURA_TELA/2 - MeasureText(textoScoreBase, 20)/2, y_start, 20, WHITE);
+        DrawText(textoBonus, LARGURA_TELA/2 - MeasureText(textoBonus, 20)/2, y_start + 30, 20, YELLOW);
+        DrawText(textoTotal, LARGURA_TELA/2 - MeasureText(textoTotal, 30)/2, y_start + 70, 30, GREEN);
     }
 }
 
@@ -675,7 +734,7 @@ void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
     // Descarrega textura do CENÁRIO
     UnloadTexture(estado->texChao); 
     UnloadTexture(estado->texBuraco); 
-    UnloadTexture(estado->texNuvem); // ADICIONADO
+    UnloadTexture(estado->texNuvem); 
     
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {

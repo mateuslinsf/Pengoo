@@ -41,7 +41,7 @@
 // --- Estruturas de Nuvens ---
 typedef struct {
     Vector2 position;
-    Color cor;
+    Color cor; // Cor de TINT (tingimento)
     float raio; // MODIFICADO: Será usado como LARGURA da textura
     float velocidade; 
     bool ativa; 
@@ -110,7 +110,7 @@ typedef struct {
     // Textura do CENÁRIO
     Texture2D texChao; // chao.png
     Texture2D texBuraco; // buraco.png
-    Texture2D texNuvem; // nuvens.png (ADICIONADO)
+    Texture2D texNuvem; // nuvens.png 
     
     // Texturas de Inimigos 
     Texture2D texObstaculoTerrestre; // pedra1.png (1x1)
@@ -125,6 +125,12 @@ typedef struct {
     int power_up_aereo_counter;
     int power_up_terrestre_counter; 
     Nuvem nuvens[NUM_NUVENS];
+    
+    // --- ADICIONADO: Variáveis de Bônus GOD ---
+    int contGod;
+    bool godAtivoAnterior;
+    bool bonusCalculado;
+    // ----------------------------------------
     
 } EstadoJogo;
 
@@ -141,5 +147,6 @@ int obterRanking(Score topScores[3], int pontuacaoAtual);
 void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int ranking); 
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado);
 void InitNuvens(EstadoJogo* estado);
+void FinalizarJogo(EstadoJogo* estado); // ADICIONADO
 
 #endif // GAME_H
