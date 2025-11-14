@@ -121,6 +121,8 @@ void FinalizarJogo(EstadoJogo* estado) {
     }
 }
 
+// --- REMOVIDA A FUNÇÃO 'RestartGame' ---
+
 
 // --- Funções da Lista Encadeada (Obstáculos) ---
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) {
@@ -350,8 +352,23 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
 }
 
 
+// --- ALTERAÇÃO AQUI ---
+// (LÓGICA DE 'UpdateGame' REMOVIDA A OPÇÃO DE REINICIAR)
+//
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
-    if (!estado->rodando) return;
+    
+    if (!estado->rodando) {
+        // O jogo está parado (GAME OVER)
+        
+        if (IsKeyPressed(KEY_X)) {
+            CloseWindow(); // Sinaliza para fechar
+        }
+        // Se o jogo está parado, sempre retorna para não executar a lógica abaixo
+        return; 
+    }
+
+    // --- O JOGO ESTÁ RODANDO ---
+
 
     // Lógica de Pulo
     if (IsKeyPressed(KEY_SPACE)) {
@@ -598,9 +615,9 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
         if (estado->texChao.id > 0) {
             for (int i = 0; i < numTiles; i++) {
                 DrawTexturePro(estado->texChao,
-                                (Rectangle){0, 0, (float)estado->texChao.width, (float)estado->texChao.height},
-                                (Rectangle){ (float)(i * OBSTACULO_LARGURA_BASE), PISO, (float)OBSTACULO_LARGURA_BASE, (float)OBSTACULO_ALTURA_BASE },
-                                (Vector2){0, 0}, 0.0f, WHITE);
+                               (Rectangle){0, 0, (float)estado->texChao.width, (float)estado->texChao.height},
+                               (Rectangle){ (float)(i * OBSTACULO_LARGURA_BASE), PISO, (float)OBSTACULO_LARGURA_BASE, (float)OBSTACULO_ALTURA_BASE },
+                               (Vector2){0, 0}, 0.0f, WHITE);
             }
         } else {
             DrawRectangle(0, PISO, LARGURA_TELA, 40, BLACK);
@@ -617,8 +634,8 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
         if (isGod) {
             strcpy(statusName, "GOD");
             remainingDistance = (pinguim->imortal_distancia_restante < pinguim->evo_distancia_restante)
-                                 ? pinguim->imortal_distancia_restante
-                                 : pinguim->evo_distancia_restante;
+                                ? pinguim->imortal_distancia_restante
+                                : pinguim->evo_distancia_restante;
         } else if (isImortal) {
             strcpy(statusName, "Gold");
             remainingDistance = pinguim->imortal_distancia_restante;
@@ -667,9 +684,9 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
 
                 if (obsTex.id > 0) {
                     DrawTexturePro(obsTex,
-                                     (Rectangle){0, 0, (float)obsTex.width, (float)obsTex.height},
-                                     obs->hitbox,
-                                     origin, rotation, WHITE);
+                                   (Rectangle){0, 0, (float)obsTex.width, (float)obsTex.height},
+                                   obs->hitbox,
+                                   origin, rotation, WHITE);
                 } else {
                     // Fallback de cor, caso a textura não carregue
                     Color fallbackColor = BLACK;
@@ -680,9 +697,9 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             }
             else if (obs->tipo == 2) { // BURACO/CHÃO QUEBRADO
                     DrawTexturePro(obs->textura,
-                                     (Rectangle){0, 0, (float)obs->textura.width, (float)obs->textura.height},
-                                     obs->hitbox,
-                                     origin, rotation, WHITE);
+                                   (Rectangle){0, 0, (float)obs->textura.width, (float)obs->textura.height},
+                                   obs->hitbox,
+                                   origin, rotation, WHITE);
             }
 
             atual = atual->proximo;
@@ -696,7 +713,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             sprintf(power_up_status, " | %s! (%d)", statusName, remainingDistance);
         }
             sprintf(hud, "Pontos: %d | Velocidade: %.1f%s | RECORDE: %s %d",
-                        estado->pontuacao, estado->velocidadeJogo, power_up_status, estado->topScores[0].nome, estado->topScores[0].pontuacao);
+                    estado->pontuacao, estado->velocidadeJogo, power_up_status, estado->topScores[0].nome, estado->topScores[0].pontuacao);
 
         DrawText(hud, 10, 10, 20, BLACK);
 
@@ -724,6 +741,16 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             DrawText(textoScoreBase, LARGURA_TELA/2 - MeasureText(textoScoreBase, 20)/2, y_start, 20, WHITE);
             DrawText(textoBonus, LARGURA_TELA/2 - MeasureText(textoBonus, 20)/2, y_start + 30, 20, YELLOW);
             DrawText(textoTotal, LARGURA_TELA/2 - MeasureText(textoTotal, 30)/2, y_start + 70, 30, GREEN);
+            
+            // --- ALTERAÇÃO AQUI ---
+            // (REMOVIDA A OPÇÃO DE REINICIAR DO TEXTO)
+            //
+            if (((int)(GetTime() * 2)) % 2 == 0) { // Pisca
+                char textoOpcoes[100];
+                sprintf(textoOpcoes, "Pressione [X] para sair");
+                DrawText(textoOpcoes, LARGURA_TELA/2 - MeasureText(textoOpcoes, 20)/2, y_start + 120, 20, WHITE);
+            }
+            // --- FIM DA ALTERAÇÃO ---
         }
     }
 }

@@ -60,7 +60,7 @@ typedef struct {
 
 typedef struct {
     Rectangle hitbox;
-    int tipo;              // 0 = Dano, 1 = Power-Up, 2 = Buraco
+    int tipo;               // 0 = Dano, 1 = Power-Up, 2 = Buraco
     Texture2D textura;
     int id_power_up;       // 1 = Imortal, 2 = Evo
 } Obstaculo;
@@ -152,5 +152,8 @@ void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int 
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado);
 void InitNuvens(EstadoJogo* estado);
 void FinalizarJogo(EstadoJogo* estado);
+
+// --- ALTERAÇÃO AQUI ---
+// (REMOVIDO PROTÓTIPO 'RestartGame')
 
 #endif // GAME_H
