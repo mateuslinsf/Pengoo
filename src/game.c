@@ -267,9 +267,9 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
 void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     srand((unsigned int)time(NULL));
 
-    // --- NOVO: Carrega Textura da Capa ---
-    // Usando o nome de arquivo 'capa_inicio.jpg'
-    estado->texCapa = LoadTexture("capa_inicio.jpg");
+    // --- ALTERAÇÃO AQUI ---
+    // Carrega a nova textura da capa do caminho especificado
+    estado->texCapa = LoadTexture("imagens_jogo/cenario/capa_inicial.jpeg");
     if (estado->texCapa.id > 0) SetTextureFilter(estado->texCapa, TEXTURE_FILTER_BILINEAR);
     // ------------------------------------
 
@@ -352,8 +352,8 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
 }
 
 
-// --- ALTERAÇÃO AQUI ---
-// (LÓGICA DE 'UpdateGame' REMOVIDA A OPÇÃO DE REINICIAR)
+//
+// LÓGICA DE 'UpdateGame' (REMOVIDA A OPÇÃO DE REINICIAR)
 //
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
     
@@ -565,32 +565,27 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim) {
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
     // Lógica principal de desenho decide o que mostrar com base no estado.
 
+    // --- ALTERAÇÃO AQUI ---
+    // (SEÇÃO 'TELA_TITULO' FOI TOTALMENTE MODIFICADA)
+    //
     if (currentScreen == TELA_TITULO) {
         // --- TELA DE TÍTULO ---
-        ClearBackground(SKYBLUE);
+        ClearBackground(SKYBLUE); // Fundo para caso a textura falhe
 
         if (estado->texCapa.id > 0) {
-            // Desenha a textura da capa cobrindo toda a tela virtual (800x450)
+            // Desenha a nova arte da capa, cobrindo toda a tela
             Rectangle sourceRect = { 0.0f, 0.0f, (float)estado->texCapa.width, (float)estado->texCapa.height };
             Rectangle destRect = { 0, 0, LARGURA_TELA, ALTURA_TELA };
             DrawTexturePro(estado->texCapa, sourceRect, destRect, (Vector2){ 0, 0 }, 0.0f, WHITE);
         } else {
-            // Fallback: Tela Azul com Texto Grande
-            DrawText("PENGOO!", LARGURA_TELA/2 - MeasureText("PENGOO!", 70)/2, ALTURA_TELA/4, 70, DARKBLUE);
+            // Fallback: Se a textura falhar, mostra um aviso
+            DrawText("Erro ao carregar capa_inicial.jpeg", 
+                     LARGURA_TELA/2 - MeasureText("Erro ao carregar capa_inicial.jpeg", 20)/2, 
+                     ALTURA_TELA/2 - 10, 20, RED);
         }
 
-        // Texto piscante "Pressione qualquer tecla"
-        if (((int)(GetTime() * 2)) % 2 == 0) { // Faz o texto piscar a cada 0.5s
-            DrawText("PRESSIONE QUALQUER TECLA PARA JOGAR",
-                     LARGURA_TELA/2 - MeasureText("PRESSIONE QUALQUER TECLA PARA JOGAR", 20)/2,
-                     ALTURA_TELA * 3/4, 20, WHITE);
-        }
-
-        // Mostra o High Score
-        char recorde[60];
-        sprintf(recorde, "RECORDE: %s %d", estado->topScores[0].nome, estado->topScores[0].pontuacao);
-        DrawText(recorde, LARGURA_TELA/2 - MeasureText(recorde, 20)/2, ALTURA_TELA - 40, 20, DARKGREEN);
-
+        // --- TODOS OS TEXTOS ANTIGOS FORAM REMOVIDOS ---
+        // (Nome "PENGOO!", "PRESSIONE...", "RECORDE:")
 
     } else {
         // --- TELA DE JOGO ---
@@ -742,15 +737,12 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             DrawText(textoBonus, LARGURA_TELA/2 - MeasureText(textoBonus, 20)/2, y_start + 30, 20, YELLOW);
             DrawText(textoTotal, LARGURA_TELA/2 - MeasureText(textoTotal, 30)/2, y_start + 70, 30, GREEN);
             
-            // --- ALTERAÇÃO AQUI ---
-            // (REMOVIDA A OPÇÃO DE REINICIAR DO TEXTO)
-            //
+            // Texto de Sair
             if (((int)(GetTime() * 2)) % 2 == 0) { // Pisca
                 char textoOpcoes[100];
                 sprintf(textoOpcoes, "Pressione [X] para sair");
                 DrawText(textoOpcoes, LARGURA_TELA/2 - MeasureText(textoOpcoes, 20)/2, y_start + 120, 20, WHITE);
             }
-            // --- FIM DA ALTERAÇÃO ---
         }
     }
 }
