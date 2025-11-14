@@ -41,65 +41,29 @@ int main(void) {
     estado.target = LoadRenderTexture(GAME_VIRTUAL_WIDTH, GAME_VIRTUAL_HEIGHT);
     SetTextureFilter(estado.target.texture, TEXTURE_FILTER_BILINEAR);
 
-    // ATENÇÃO: InitGame() carrega TODAS as texturas (Capa, Pinguim, etc)
-    // O jogo é inicializado mas fica "pausado" até a tela JOGANDO.
+    // InitGame() carrega TODAS as texturas (Capa, Pinguim, etc)
     InitGame(&estado, &pinguim);
 
-    // Salva o estado normal do terminal
-    int old_flags = fcntl(STDIN_FILENO, F_GETFL);
+    // Salva o estado normal do terminal (para o printf final, se houver)
+    // int old_flags = fcntl(STDIN_FILENO, F_GETFL); // Removido pois não é mais necessário
 
     // Loop principal
     while (!WindowShouldClose()) {
-
-        // --- ALTERAÇÃO AQUI (Lógica de atualização de telas) ---
 
         // Toggle Fullscreen com F11
         if (IsKeyPressed(KEY_F11)) {
             ToggleFullscreen();
         }
-
-        // Gerencia o fluxo de telas e atualização do jogo
-        switch (currentScreen) {
-            case TELA_TITULO: {
-                // Espera qualquer tecla para ir ao Tutorial
-                if (GetKeyPressed() != 0) {
-                    currentScreen = TELA_TUTORIAL;
-                }
-            } break;
-            
-            case TELA_TUTORIAL: {
-                // Espera qualquer tecla para iniciar o Jogo
-                if (GetKeyPressed() != 0) {
-                    currentScreen = JOGANDO;
-                    // O jogo já foi inicializado por InitGame(),
-                    // agora ele vai começar a rodar no case JOGANDO.
-                }
-            } break;
-            
-            case JOGANDO: {
-                // Atualiza o jogo
-                UpdateGame(&estado, &pinguim);
-                
-                // Se UpdateGame parou o jogo (morreu)
-                if (!estado.rodando) {
-                    currentScreen = FIM_DE_JOGO;
-                }
-            } break;
-            
-            case FIM_DE_JOGO: {
-                // Continua chamando UpdateGame para checar a tecla 'X' para Sair
-                // (A lógica de 'X' está dentro de UpdateGame)
-                UpdateGame(&estado, &pinguim); 
-            } break;
-            
-            default: break;
-        }
+        
+        // --- ALTERAÇÃO AQUI ---
+        // UpdateGame agora gerencia TODAS as atualizações e transições de tela
+        UpdateGame(&estado, &pinguim, &currentScreen);
         // --- FIM DA ALTERAÇÃO ---
 
 
         // --- 1. Renderização no Target Virtual ---
         BeginTextureMode(estado.target);
-            // DrawGame vai desenhar a tela correta (Titulo, Tutorial, Jogo, Fim)
+            // DrawGame vai desenhar a tela correta (Titulo, Tutorial, Jogo, etc)
             DrawGame(&estado, &pinguim, currentScreen);
         EndTextureMode();
 
@@ -131,43 +95,12 @@ int main(void) {
     UnloadGame(&estado, &pinguim);
     CloseWindow();
 
-    // Restaura o terminal
-    fcntl(STDIN_FILENO, F_SETFL, old_flags);
-
-    // High Score ao final
-    if (currentScreen == FIM_DE_JOGO) {
-
-        int ranking = obterRanking(estado.topScores, estado.pontuacao);
-
-        if (ranking > 0) {
-
-            printf("\n--- NOVO RECORDE! ---\n");
-            printf("Sua pontuação: %d\n", estado.pontuacao);
-
-            if (ranking == 1)      printf("Você ficou em 1º LUGAR!\n");
-            else if (ranking == 2) printf("Você ficou em 2º LUGAR!\n");
-            else                   printf("Você ficou em 3º LUGAR!\n");
-
-            printf("Digite suas 3 iniciais (ex: LFG): ");
-            char nome[10];
-            scanf("%3s", nome);
-
-            adicionarNovoScore(estado.topScores, estado.pontuacao, nome, ranking);
-            salvarHighScores(estado.topScores);
-
-            printf("Score salvo!\n");
-
-        } else {
-            printf("Game Over! Pontuação Final: %d\n", estado.pontuacao);
-        }
-    }
-
-    printf("\n--- TOP 3 SCORES ---\n");
-    for (int i = 0; i < 3; i++) {
-        printf("%d. %s .... %d\n", i + 1,
-               estado.topScores[i].nome,
-               estado.topScores[i].pontuacao);
-    }
+    // --- ALTERAÇÃO AQUI ---
+    // A lógica de High Score do terminal foi REMOVIDA
+    // (ela agora acontece dentro do jogo)
+    // --- FIM DA ALTERAÇÃO ---
+    
+    // fcntl(STDIN_FILENO, F_SETFL, old_flags); // Removido
 
     return 0;
 }

@@ -7,9 +7,10 @@
 // --- Enum para gerenciar as telas do jogo ---
 typedef enum GameScreen {
     TELA_TITULO = 0,
-    TELA_TUTORIAL, // <--- ALTERAÇÃO AQUI (Nova tela)
+    TELA_TUTORIAL,
     JOGANDO,
-    FIM_DE_JOGO
+    FIM_DE_JOGO_INPUT, // <--- NOVO ESTADO: Para digitar o nome
+    FIM_DE_JOGO_FINAL  // <--- NOVO ESTADO: Para mostrar score final e Top 3
 } GameScreen;
 
 // --- Constantes ---
@@ -138,11 +139,18 @@ typedef struct {
     int contGod;
     bool godAtivoAnterior;
     bool bonusCalculado;
+
+    // --- VARIÁVEIS NOVAS PARA O HIGH SCORE ---
+    char nomeJogador[4]; // Buffer para as 3 iniciais + '\0'
+    int nomeIndex;       // Quantas letras foram digitadas
+    int rankingJogador;  // 1, 2, ou 3 (ou 0 se não entrou)
+
 } EstadoJogo;
 
 // --- Protótipos de Funções ---
 void InitGame(EstadoJogo* estado, Pinguim* pinguim);
-void UpdateGame(EstadoJogo* estado, Pinguim* pinguim);
+// --- ASSINATURA DE UPDATEGAME MUDOU ---
+void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen);
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen);
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim);
 
