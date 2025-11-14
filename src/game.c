@@ -267,8 +267,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
 void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     srand((unsigned int)time(NULL));
 
-    // --- ALTERAÇÃO AQUI ---
-    // Carrega a nova textura da capa do caminho especificado
+    // Carrega a textura da capa
     estado->texCapa = LoadTexture("imagens_jogo/cenario/capa_inicial.jpeg");
     if (estado->texCapa.id > 0) SetTextureFilter(estado->texCapa, TEXTURE_FILTER_BILINEAR);
     // ------------------------------------
@@ -566,10 +565,10 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
     // Lógica principal de desenho decide o que mostrar com base no estado.
 
     // --- ALTERAÇÃO AQUI ---
-    // (SEÇÃO 'TELA_TITULO' FOI TOTALMENTE MODIFICADA)
+    // (SEÇÃO 'TELA_TITULO' FOI COMBINADA COM 'TELA_TUTORIAL')
     //
-    if (currentScreen == TELA_TITULO) {
-        // --- TELA DE TÍTULO ---
+    if (currentScreen == TELA_TITULO || currentScreen == TELA_TUTORIAL) {
+        // --- TELA DE TÍTULO / TUTORIAL ---
         ClearBackground(SKYBLUE); // Fundo para caso a textura falhe
 
         if (estado->texCapa.id > 0) {
@@ -579,16 +578,15 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             DrawTexturePro(estado->texCapa, sourceRect, destRect, (Vector2){ 0, 0 }, 0.0f, WHITE);
         } else {
             // Fallback: Se a textura falhar, mostra um aviso
-            DrawText("Erro ao carregar capa_inicial.jpeg", 
-                     LARGURA_TELA/2 - MeasureText("Erro ao carregar capa_inicial.jpeg", 20)/2, 
+            const char *text = (currentScreen == TELA_TITULO) ? 
+                    "Erro ao carregar capa_inicial.jpeg" : "Erro ao carregar tutorial";
+            DrawText(text, 
+                     LARGURA_TELA/2 - MeasureText(text, 20)/2, 
                      ALTURA_TELA/2 - 10, 20, RED);
         }
 
-        // --- TODOS OS TEXTOS ANTIGOS FORAM REMOVIDOS ---
-        // (Nome "PENGOO!", "PRESSIONE...", "RECORDE:")
-
     } else {
-        // --- TELA DE JOGO ---
+        // --- TELA DE JOGO (JOGANDO ou FIM_DE_JOGO) ---
         ClearBackground(SKYBLUE);
 
         // --- Desenha as Nuvens (No fundo, antes do chão) ---
@@ -749,7 +747,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
 
 
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
-    // --- NOVO: Descarrega a textura da Capa ---
+    // Descarrega a textura da Capa
     UnloadTexture(estado->texCapa);
     // -----------------------------------------
 

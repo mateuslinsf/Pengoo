@@ -7,6 +7,7 @@
 // --- Enum para gerenciar as telas do jogo ---
 typedef enum GameScreen {
     TELA_TITULO = 0,
+    TELA_TUTORIAL, // <--- ALTERAÇÃO AQUI (Nova tela)
     JOGANDO,
     FIM_DE_JOGO
 } GameScreen;
@@ -152,8 +153,5 @@ void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int 
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado);
 void InitNuvens(EstadoJogo* estado);
 void FinalizarJogo(EstadoJogo* estado);
-
-// --- ALTERAÇÃO AQUI ---
-// (REMOVIDO PROTÓTIPO 'RestartGame')
 
 #endif // GAME_H

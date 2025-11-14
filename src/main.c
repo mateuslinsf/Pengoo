@@ -35,12 +35,14 @@ int main(void) {
     Pinguim pinguim = {0};
 
     // Variável para controlar a tela atual
-    GameScreen currentScreen = TELA_TITULO;
+    GameScreen currentScreen = TELA_TITULO; // Começa na TELA_TITULO
 
     // Cria o Target 800x450
     estado.target = LoadRenderTexture(GAME_VIRTUAL_WIDTH, GAME_VIRTUAL_HEIGHT);
     SetTextureFilter(estado.target.texture, TEXTURE_FILTER_BILINEAR);
 
+    // ATENÇÃO: InitGame() carrega TODAS as texturas (Capa, Pinguim, etc)
+    // O jogo é inicializado mas fica "pausado" até a tela JOGANDO.
     InitGame(&estado, &pinguim);
 
     // Salva o estado normal do terminal
@@ -49,31 +51,55 @@ int main(void) {
     // Loop principal
     while (!WindowShouldClose()) {
 
-        // Entrada da Tela de Título
-        if (currentScreen == TELA_TITULO) {
-            if (GetKeyPressed() != 0) {
-                currentScreen = JOGANDO;
-            }
-        }
+        // --- ALTERAÇÃO AQUI (Lógica de atualização de telas) ---
 
         // Toggle Fullscreen com F11
         if (IsKeyPressed(KEY_F11)) {
             ToggleFullscreen();
         }
 
-        // Atualização do jogo
-        if (currentScreen == JOGANDO ||
-            (currentScreen == FIM_DE_JOGO && !estado.rodando)) {
-
-            UpdateGame(&estado, &pinguim);
-
-            if (!estado.rodando) {
-                currentScreen = FIM_DE_JOGO;
-            }
+        // Gerencia o fluxo de telas e atualização do jogo
+        switch (currentScreen) {
+            case TELA_TITULO: {
+                // Espera qualquer tecla para ir ao Tutorial
+                if (GetKeyPressed() != 0) {
+                    currentScreen = TELA_TUTORIAL;
+                }
+            } break;
+            
+            case TELA_TUTORIAL: {
+                // Espera qualquer tecla para iniciar o Jogo
+                if (GetKeyPressed() != 0) {
+                    currentScreen = JOGANDO;
+                    // O jogo já foi inicializado por InitGame(),
+                    // agora ele vai começar a rodar no case JOGANDO.
+                }
+            } break;
+            
+            case JOGANDO: {
+                // Atualiza o jogo
+                UpdateGame(&estado, &pinguim);
+                
+                // Se UpdateGame parou o jogo (morreu)
+                if (!estado.rodando) {
+                    currentScreen = FIM_DE_JOGO;
+                }
+            } break;
+            
+            case FIM_DE_JOGO: {
+                // Continua chamando UpdateGame para checar a tecla 'X' para Sair
+                // (A lógica de 'X' está dentro de UpdateGame)
+                UpdateGame(&estado, &pinguim); 
+            } break;
+            
+            default: break;
         }
+        // --- FIM DA ALTERAÇÃO ---
+
 
         // --- 1. Renderização no Target Virtual ---
         BeginTextureMode(estado.target);
+            // DrawGame vai desenhar a tela correta (Titulo, Tutorial, Jogo, Fim)
             DrawGame(&estado, &pinguim, currentScreen);
         EndTextureMode();
 
