@@ -53,3 +53,8 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Bloquear arquivos ADS do Windows
+*.Zone.Identifier
+*.:Zone.Identifier
+*Zone.Identifier*
