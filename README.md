@@ -21,6 +21,14 @@ O **Pengoo** é um game baseado no cliff jump (pou), em que o personagem princip
 
 ---
 
+## Imagens do Game :
+<img src="imagens_jogo/cenario/capa_inicial.jpeg" alt="Capa inicial" width="250"/>  
+<img src="imagens_jogo/cenario/gameplay.png" alt="game play" width="250"/> 
+<img src="imagens_jogo/cenario/gameover.png" alt=" game over " width="250"/> 
+
+
+---
+
 ## Equipe de Desenvolvimento 👥: 
 
 * **Luiz Felipe Siqueira** - [@LuizNoCode](https://github.com/LuizNoCode)
