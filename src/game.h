@@ -3,17 +3,17 @@
 
 #include "raylib.h"
 #include <stdbool.h>
-#include <stdio.h>   // <-- ADICIONADO: Corrige "FILE" undefined
-#include <stdlib.h>  // <-- ADICIONADO: Corrige "malloc" undefined (boa prática)
-#include <string.h>  // <-- ADICIONADO: Corrige "strcpy" undefined (boa prática)
+#include <stdio.h>   
+#include <stdlib.h>  
+#include <string.h>  
 
-// --- Enum para gerenciar as telas do jogo ---
+// --- gerenciando as telas do jogo ---
 typedef enum GameScreen {
     TELA_TITULO = 0,
     TELA_TUTORIAL,
     JOGANDO,
-    FIM_DE_JOGO_INPUT, // <--- NOVO ESTADO: Para digitar o nome
-    FIM_DE_JOGO_FINAL  // <--- NOVO ESTADO: Para mostrar score final e Top 3
+    FIM_DE_JOGO_INPUT, 
+    FIM_DE_JOGO_FINAL  
 } GameScreen;
 
 // --- Constantes ---
@@ -21,24 +21,24 @@ typedef enum GameScreen {
 #define PONTOS_PARA_SUBIR_NIVEL 200
 #define INTERVALO_SPAWN_MINIMO 0.7f
 
-// Tamanho jogável do Pinguim (50x55)
+// Tamanho jogável do Pengo
 #define PINGUIM_LARGURA_BASE 50
 #define PINGUIM_ALTURA_BASE 55
 
-// Tamanho de visualização/hitbox dos Obstáculos (Base 40x40)
+// Tamanho de visualização/hitbox dos Obstáculos 
 #define OBSTACULO_LARGURA_BASE 40
 #define OBSTACULO_ALTURA_BASE 40
 
-// Largura do buraco (4 blocos)
+// Largura do buraco 
 #define LARGURA_BURACO_BLOCO 4
 
-// --- Constantes do Power-Up Imortalidade ---
+// --- Constantes do poder de Imortalidade ---
 #define PONTUACAO_MINIMA_IMORTALIDADE 2000
 #define CICLE_SPAWN_IMORTALIDADE 5
 #define DISTANCIA_IMORTALIDADE 500
 #define TIPO_IMORTAL 5
 
-// --- Constantes do Power-Up EVO (Pulo Triplo) ---
+// --- Constantes do poder EVO (Pulo Triplo) ---
 #define PONTUACAO_MINIMA_EVO 2000
 #define CICLE_SPAWN_EVO 4
 #define DISTANCIA_EVO 500
@@ -51,8 +51,8 @@ typedef enum GameScreen {
 // --- Estrutura de Nuvens ---
 typedef struct {
     Vector2 position;
-    Color cor;       // Cor de tint (tingimento)
-    float raio;      // Usado como largura da textura
+    Color cor;       
+    float raio;      
     float velocidade;
     bool ativa;
 } Nuvem;
@@ -65,9 +65,9 @@ typedef struct {
 
 typedef struct {
     Rectangle hitbox;
-    int tipo;          // 0 = Dano, 1 = Power-Up, 2 = Buraco
+    int tipo;          
     Texture2D textura;
-    int id_power_up;   // 1 = Imortal, 2 = Evo
+    int id_power_up;   
 } Obstaculo;
 
 // --- Lista encadeada de obstáculos ---
@@ -85,7 +85,7 @@ typedef struct {
 
     Rectangle hitbox;
 
-    // Power-ups
+    // Poderes 
     int imortal_distancia_restante;
     int evo_distancia_restante;
     bool imortal_ativo;
@@ -108,7 +108,7 @@ typedef struct {
 
     // Texturas de Tela
     Texture2D texCapa;
-    Texture2D texTutorial; // <-- ADICIONADO
+    Texture2D texTutorial; 
 
     // Texturas do Pinguim
     Texture2D texPinguimAndando;
@@ -131,7 +131,7 @@ typedef struct {
     Texture2D texObstaculoTerrestre2x1;
     Texture2D texObstaculoVertical;
 
-    // Texturas de Power-Up
+    // Texturas de Poderes
     Texture2D texPowerUpImortal;
     Texture2D texPowerUpEvo;
 
@@ -144,8 +144,8 @@ typedef struct {
     bool godAtivoAnterior;
     bool bonusCalculado;
 
-    // --- VARIÁVEIS NOVAS PARA O HIGH SCORE ---
-    char nomeJogador[4]; // Buffer para as 3 iniciais + '\0'
+    // --- VARIÁVEIS PARA O HIGH SCORE ---
+    char nomeJogador[4]; // colocar as iniciais
     int nomeIndex;       // Quantas letras foram digitadas
     int rankingJogador;  // 1, 2, ou 3 (ou 0 se não entrou)
 
@@ -153,9 +153,9 @@ typedef struct {
 
 // --- Protótipos de Funções ---
 void InitGame(EstadoJogo* estado, Pinguim* pinguim);
-// --- ASSINATURA DE UPDATEGAME MUDOU ---
+// --- ASSINATURA DE UPDATEGAME ---
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen);
-// --- ASSINATURA DE DRAWGAME MUDOU ---
+// --- ASSINATURA DE DRAWGAME ---
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen);
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim);
 
@@ -167,4 +167,4 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado);
 void InitNuvens(EstadoJogo* estado);
 void FinalizarJogo(EstadoJogo* estado);
 
-#endif // GAME_H
+#endif 

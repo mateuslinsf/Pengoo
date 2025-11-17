@@ -1,8 +1,3 @@
-/*
- * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM TELA DE TUTORIAL)
- * ========================================
- */
 
 #include "game.h"
 #include <stdlib.h>
@@ -25,7 +20,7 @@
 #define DISTANCIA_HABILIDADE DISTANCIA_IMORTALIDADE
 
 
-// --- Funções de High Score (Não Mudam) ---
+// --- Funções de High Score ---
 void carregarHighScores(Score topScores[3]) {
     for (int i = 0; i < 3; i++) {
         strcpy(topScores[i].nome, "---");
@@ -89,7 +84,7 @@ void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int 
     }
 }
 
-// FinalizarJogo agora também calcula o ranking
+// FinalizarJogo e calcula o ranking
 void FinalizarJogo(EstadoJogo* estado) {
     if (estado->bonusCalculado) return; // Só roda uma vez
 
@@ -108,22 +103,22 @@ void FinalizarJogo(EstadoJogo* estado) {
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) {
     int tipo = 0;
 
-    // 1. Prioridade: Power-Up Imortalidade (Aéreo)
+    //  Imortalidade (Aéreo)
     if (pontuacao >= PONTUACAO_MINIMA_IMORTALIDADE && estado->power_up_aereo_counter >= CICLE_SPAWN_IMORTALIDADE) {
-        tipo = TIPO_IMORTAL; // 5 (Imortalidade - Pelicano Gold)
+        tipo = TIPO_IMORTAL; //(Imortalidade - Pelicano Gold)
         estado->power_up_aereo_counter = 0;
     }
-    // 2. Prioridade: Power-Up Evo (Terrestre - pós 2000 pontos)
+    //  Evo (Terrestre - pós 2000 pontos)
     else if (pontuacao >= PONTUACAO_MINIMA_EVO && estado->power_up_terrestre_counter >= CICLE_SPAWN_EVO) {
-        tipo = TIPO_EVO; // 6 (Evo - Pedra EVO)
+        tipo = TIPO_EVO; //(Evo - Pedra EVO)
         estado->power_up_terrestre_counter = 0;
     }
-    // 3. Spawn Normal
+    //  Spawn Normal
     else {
         if (pontuacao < 650) {
-            tipo = rand() % 4; // 0, 1, 2, 3
+            tipo = rand() % 4; 
         } else {
-            tipo = rand() % 5; // 0, 1, 2, 3, 4 (Pós-650)
+            tipo = rand() % 5; 
         }
     }
 
@@ -146,7 +141,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
         novoObs->textura = estado->texObstaculoTerrestre2x1; // Urso Polar
-        novoObs->tipo = 0; // Inimigo de dano
+        novoObs->tipo = 0; 
         novoObs->id_power_up = 0;
 
         novoNo->obstaculo = novoObs;
@@ -166,7 +161,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
     novoObs->tipo = 0;
     novoObs->id_power_up = 0; 
 
-    if (tipo == 0) { // Terrestre (Simples 1x1: Pedra 1)
+    if (tipo == 0) { // 1x1 - Pedra 1)
         novoObs->hitbox.y = PISO - obsAltura + AJUSTE_VERTICAL;
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
@@ -194,7 +189,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         }
         novoObs->hitbox.width = buracoLargura;
     }
-    else if (tipo == 4) { // Terrestre 3# Vertical (Pedra 3)
+    else if (tipo == 4) { //  Vertical (Pedra 3)
         obsAltura = OBSTACULO_ALTURA_BASE * 3;
         novoObs->hitbox.y = PISO - obsAltura + 10 + AJUSTE_VERTICAL;
         novoObs->hitbox.width = obsLargura;
@@ -202,7 +197,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         novoObs->textura = estado->texObstaculoVertical;
         novoObs->tipo = 0;
     }
-    else if (tipo == TIPO_IMORTAL) { // Power-Up Imortalidade (Pelicano Gold)
+    else if (tipo == TIPO_IMORTAL) { // Imortalidade (Pelicano Gold)
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
         novoObs->textura = estado->texPowerUpImortal;
@@ -213,7 +208,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         else if (alturaSorteada == 1) { novoObs->hitbox.y = PISO - 120; }
         else { novoObs->hitbox.y = PISO - 100; }
     }
-    else if (tipo == TIPO_EVO) { // Power-Up Evo (Terrestre: pedra1_evo)
+    else if (tipo == TIPO_EVO) { // Evo (Terrestre: pedra1_evo)
         obsAltura = OBSTACULO_ALTURA_BASE;
         novoObs->hitbox.y = PISO - obsAltura + AJUSTE_VERTICAL;
         novoObs->hitbox.width = obsLargura;
@@ -229,7 +224,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
 }
 
 
-// --- Funções Principais do Jogo ---
+// --- Funções principais do jogo ---
 
 void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     srand((unsigned int)time(NULL));
@@ -237,7 +232,7 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->texCapa = LoadTexture("imagens_jogo/cenario/capa_inicial.jpeg");
     if (estado->texCapa.id > 0) SetTextureFilter(estado->texCapa, TEXTURE_FILTER_BILINEAR);
 
-    // --- ADICIONADO: Carrega Textura do Tutorial ---
+    // --- Carrega a textura do tutorial ---
     estado->texTutorial = LoadTexture("imagens_jogo/cenario/tutorial.jpg");
     if (estado->texTutorial.id > 0) SetTextureFilter(estado->texTutorial, TEXTURE_FILTER_BILINEAR);
 
@@ -309,10 +304,8 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     InitNuvens(estado);
 }
 
+// UpdateGame gerencia todos os estados do jogo
 
-//
-// UpdateGame agora gerencia TODOS os estados do jogo
-//
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen) {
     
     switch (*currentScreen) {
@@ -340,7 +333,7 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
                 return; // Sai do Update
             }
             
-            // --- Lógica do Jogo Rodando (Código antigo do UpdateGame) ---
+            // --- Lógica do Jogo Rodando ---
             if (IsKeyPressed(KEY_SPACE)) {
                 if (pinguim->estaNoChao) {
                     pinguim->velocidade_y = FORCA_PULO;
@@ -393,7 +386,7 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
             }
 
             if (pinguim->position.y > ALTURA_TELA) {
-                FinalizarJogo(estado); // <--- Morte por queda
+                FinalizarJogo(estado); // Morte por queda
                 return; 
             }
 
@@ -477,29 +470,29 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
                     }
                     else if (atual->obstaculo->tipo == 0) { 
                         if (!pinguim->imortal_ativo) {
-                            FinalizarJogo(estado); // <--- Morte por colisão
+                            FinalizarJogo(estado); // Morte por colisão
                             break; 
                         } else {
                             atual->obstaculo->tipo = -1;
                         }
                     }
                     else if (atual->obstaculo->tipo == 2) { 
-                        FinalizarJogo(estado); // <--- Morte por colisão (buraco)
+                        FinalizarJogo(estado); // Morte por colisão (buraco)
                         break;
                     }
                 }
                 atual = atual->proximo;
             }
-            // --- Fim da Lógica do Jogo Rodando ---
+    
             
         } break;
         
         case FIM_DE_JOGO_INPUT: {
             // Lógica de Captura de Tecla
-            int key = GetCharPressed(); // Usar GetCharPressed para pegar A-Z
+            int key = GetCharPressed(); 
             
-            // Pegar A-Z (maiúsculas)
-            if (key >= 'a' && key <= 'z') key = key - 32; // Converter para maiúscula
+            
+            if (key >= 'a' && key <= 'z') key = key - 32; 
             
             if (key >= 'A' && key <= 'Z') {
                 if (estado->nomeIndex < 3) {
@@ -509,7 +502,6 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
                 }
             }
             
-            // Checar teclas especiais
             if (IsKeyPressed(KEY_BACKSPACE)) {
                 if (estado->nomeIndex > 0) {
                     estado->nomeIndex--;
@@ -536,8 +528,8 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
     }
 }
 
-// --- NOVA FUNÇÃO HELPER ---
-// Desenha apenas o cenário do jogo (céu, nuvens, chão, pinguim, obstáculos)
+
+// Desenha o cenário do jogo (céu, nuvens, chão, pinguim, obstáculos)
 void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
     ClearBackground(SKYBLUE);
 
@@ -553,7 +545,7 @@ void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
         }
     }
 
-    // --- 1. Desenha o Chão ---
+    // --- Desenha o Chão ---
     int numTiles = LARGURA_TELA / OBSTACULO_LARGURA_BASE;
     if (estado->texChao.id > 0) {
         for (int i = 0; i < numTiles; i++) {
@@ -566,7 +558,7 @@ void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
         DrawRectangle(0, PISO, LARGURA_TELA, 40, BLACK);
     }
 
-    // --- 2. Desenha o Pinguim ---
+    // --- Desenha o Pinguim ---
     bool isImortal = pinguim->imortal_distancia_restante > 0;
     bool isEvo = pinguim->evo_distancia_restante > 0;
     bool isGod = isImortal && isEvo;
@@ -582,7 +574,7 @@ void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
     DrawTexturePro(texAtual, sourceRect, destRect, (Vector2){0,0}, 0.0f, WHITE);
 
 
-    // --- 3. Desenha os Obstáculos ---
+    // --- Desenha os Obstáculos ---
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {
         Obstaculo* obs = atual->obstaculo;
@@ -606,7 +598,7 @@ void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
 
 
 //
-// DrawGame agora usa a função helper e desenha as telas de Game Over
+// DrawGame agora desenha as telas de Game Over
 //
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
 
@@ -614,7 +606,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
         
         case TELA_TITULO: {
             // --- TELA DE TÍTULO ---
-            ClearBackground(SKYBLUE); // Fundo para caso a textura falhe
+            ClearBackground(SKYBLUE); 
             if (estado->texCapa.id > 0) {
                 Rectangle sourceRect = { 0.0f, 0.0f, (float)estado->texCapa.width, (float)estado->texCapa.height };
                 Rectangle destRect = { 0, 0, LARGURA_TELA, ALTURA_TELA };
@@ -625,9 +617,9 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             }
         } break;
         
-        // --- ADICIONADO: Case para a Tela de Tutorial ---
+        // Case para a Tela de Tutorial
         case TELA_TUTORIAL: {
-            ClearBackground(SKYBLUE); // Fundo para caso a textura falhe
+            ClearBackground(SKYBLUE); 
             if (estado->texTutorial.id > 0) {
                 Rectangle sourceRect = { 0.0f, 0.0f, (float)estado->texTutorial.width, (float)estado->texTutorial.height };
                 Rectangle destRect = { 0, 0, LARGURA_TELA, ALTURA_TELA };
@@ -729,7 +721,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             DrawText(textoBonus, LARGURA_TELA/2 - MeasureText(textoBonus, 20)/2, y_start + 30, 20, YELLOW);
             DrawText(textoTotal, LARGURA_TELA/2 - MeasureText(textoTotal, 30)/2, y_start + 70, 30, GREEN);
 
-            // --- Desenha o TOP 3 ---
+            // --- escreve o top 3 ---
             int y_top3 = y_start + 120;
             DrawText("--- TOP 3 SCORES ---", LARGURA_TELA/2 - MeasureText("--- TOP 3 SCORES ---", 20)/2, y_top3, 20, WHITE);
 
@@ -752,7 +744,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
 
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
     UnloadTexture(estado->texCapa);
-    UnloadTexture(estado->texTutorial); // <-- ADICIONADO
+    UnloadTexture(estado->texTutorial); 
     UnloadTexture(estado->texPinguimAndando);
     UnloadTexture(estado->texPinguimPulando);
     UnloadTexture(estado->texObstaculoTerrestre);

@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "//wsl.localhost/Ubuntu-24.04/home/mateuslins/Pengoo",
-      "program": "//wsl.localhost/Ubuntu-24.04/home/mateuslins/Pengoo/build/Debug/outDebug",
+      "cwd": "//wsl.localhost/Ubuntu-24.04/home/mateuslins/Pengoo/imagens_jogo/cenario",
+      "program": "//wsl.localhost/Ubuntu-24.04/home/mateuslins/Pengoo/imagens_jogo/cenario/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

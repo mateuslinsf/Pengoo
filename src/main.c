@@ -1,8 +1,4 @@
-/*
- * ========================================
- * ARQUIVO PRINCIPAL: src/main.c (VERSÃO FINAL COM RESIZE E RENDERIZACAO CORRETA)
- * ========================================
- */
+
 
 #include "raylib.h"
 #include "game.h"
@@ -17,10 +13,10 @@
 
 int main(void) {
 
-    // Configurações iniciais
+    
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_FULLSCREEN_MODE);
 
-    // Inicia a janela na resolução do monitor primário
+    // Inicia a janela na resolução do monitor
     int monitor = GetCurrentMonitor();
     int screenWidth = GetMonitorWidth(monitor);
     int screenHeight = GetMonitorHeight(monitor);
@@ -35,39 +31,34 @@ int main(void) {
     Pinguim pinguim = {0};
 
     // Variável para controlar a tela atual
-    GameScreen currentScreen = TELA_TITULO; // Começa na TELA_TITULO
+    GameScreen currentScreen = TELA_TITULO; 
 
-    // Cria o Target 800x450
+    // Cria o Target 
     estado.target = LoadRenderTexture(GAME_VIRTUAL_WIDTH, GAME_VIRTUAL_HEIGHT);
     SetTextureFilter(estado.target.texture, TEXTURE_FILTER_BILINEAR);
 
-    // InitGame() carrega TODAS as texturas (Capa, Pinguim, etc)
+    // carrega TODAS as texturas 
     InitGame(&estado, &pinguim);
-
-    // Salva o estado normal do terminal (para o printf final, se houver)
-    // int old_flags = fcntl(STDIN_FILENO, F_GETFL); // Removido pois não é mais necessário
 
     // Loop principal
     while (!WindowShouldClose()) {
 
-        // Toggle Fullscreen com F11
+        // Fullscreen com F11
         if (IsKeyPressed(KEY_F11)) {
             ToggleFullscreen();
         }
         
-        // --- ALTERAÇÃO AQUI ---
-        // UpdateGame agora gerencia TODAS as atualizações e transições de tela
+        // UpdateGame gerencia as atualizações e transições de tela
         UpdateGame(&estado, &pinguim, &currentScreen);
-        // --- FIM DA ALTERAÇÃO ---
-
+        
 
         // --- 1. Renderização no Target Virtual ---
         BeginTextureMode(estado.target);
-            // DrawGame vai desenhar a tela correta (Titulo, Tutorial, Jogo, etc)
+            // DrawGame desenha a tela (Titulo, Tutorial, Jogo, etc)
             DrawGame(&estado, &pinguim, currentScreen);
         EndTextureMode();
 
-        // --- 2. Desenha na tela real com Letterbox ---
+        // --- 2. Desenha na tela real com letterbox ---
         BeginDrawing();
             ClearBackground(BLACK);
 
@@ -94,13 +85,6 @@ int main(void) {
     UnloadRenderTexture(estado.target);
     UnloadGame(&estado, &pinguim);
     CloseWindow();
-
-    // --- ALTERAÇÃO AQUI ---
-    // A lógica de High Score do terminal foi REMOVIDA
-    // (ela agora acontece dentro do jogo)
-    // --- FIM DA ALTERAÇÃO ---
-    
-    // fcntl(STDIN_FILENO, F_SETFL, old_flags); // Removido
 
     return 0;
 }
