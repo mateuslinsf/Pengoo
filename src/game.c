@@ -1,6 +1,6 @@
 /*
  * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM BÔNUS GOD)
+ * ARQUIVO DE LÓGICA: src/game.c (VERSÃO FINAL COM TELA DE TUTORIAL)
  * ========================================
  */
 
@@ -236,6 +236,10 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
 
     estado->texCapa = LoadTexture("imagens_jogo/cenario/capa_inicial.jpeg");
     if (estado->texCapa.id > 0) SetTextureFilter(estado->texCapa, TEXTURE_FILTER_BILINEAR);
+
+    // --- ADICIONADO: Carrega Textura do Tutorial ---
+    estado->texTutorial = LoadTexture("imagens_jogo/cenario/tutorial.jpg");
+    if (estado->texTutorial.id > 0) SetTextureFilter(estado->texTutorial, TEXTURE_FILTER_BILINEAR);
 
     estado->texPinguimAndando = LoadTexture("imagens_jogo/pengoo/pengoo_surfando.png");
     estado->texPinguimPulando = LoadTexture("imagens_jogo/pengoo/pengoo_pulando.png");
@@ -526,7 +530,7 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
         
         case FIM_DE_JOGO_FINAL: {
             if (IsKeyPressed(KEY_X)) {
-                CloseWindow();
+                CloseWindow(); // Mantém o X para sair
             }
         } break;
     }
@@ -593,12 +597,9 @@ void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
                 DrawRectangleRec(obs->hitbox, fallbackColor);
             }
         }
-        // --- CORREÇÃO AQUI ---
-        // Adicionado o argumento '0.0f' para a rotação
         else if (obs->tipo == 2) { 
             DrawTexturePro(obs->textura, (Rectangle){0, 0, (float)obs->textura.width, (float)obs->textura.height}, obs->hitbox, (Vector2){0,0}, 0.0f, WHITE);
         }
-        // --- FIM DA CORREÇÃO ---
         atual = atual->proximo;
     }
 }
@@ -611,16 +612,28 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
 
     switch (currentScreen) {
         
-        case TELA_TITULO:
-        case TELA_TUTORIAL: {
-            // --- TELA DE TÍTULO / TUTORIAL ---
+        case TELA_TITULO: {
+            // --- TELA DE TÍTULO ---
             ClearBackground(SKYBLUE); // Fundo para caso a textura falhe
             if (estado->texCapa.id > 0) {
                 Rectangle sourceRect = { 0.0f, 0.0f, (float)estado->texCapa.width, (float)estado->texCapa.height };
                 Rectangle destRect = { 0, 0, LARGURA_TELA, ALTURA_TELA };
                 DrawTexturePro(estado->texCapa, sourceRect, destRect, (Vector2){ 0, 0 }, 0.0f, WHITE);
             } else {
-                const char *text = (currentScreen == TELA_TITULO) ? "Erro ao carregar capa_inicial.jpeg" : "Erro ao carregar tutorial";
+                const char *text = "Erro ao carregar capa_inicial.jpeg";
+                DrawText(text, LARGURA_TELA/2 - MeasureText(text, 20)/2, ALTURA_TELA/2 - 10, 20, RED);
+            }
+        } break;
+        
+        // --- ADICIONADO: Case para a Tela de Tutorial ---
+        case TELA_TUTORIAL: {
+            ClearBackground(SKYBLUE); // Fundo para caso a textura falhe
+            if (estado->texTutorial.id > 0) {
+                Rectangle sourceRect = { 0.0f, 0.0f, (float)estado->texTutorial.width, (float)estado->texTutorial.height };
+                Rectangle destRect = { 0, 0, LARGURA_TELA, ALTURA_TELA };
+                DrawTexturePro(estado->texTutorial, sourceRect, destRect, (Vector2){ 0, 0 }, 0.0f, WHITE);
+            } else {
+                const char *text = "Erro ao carregar tutorial.jpg";
                 DrawText(text, LARGURA_TELA/2 - MeasureText(text, 20)/2, ALTURA_TELA/2 - 10, 20, RED);
             }
         } break;
@@ -739,6 +752,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
 
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
     UnloadTexture(estado->texCapa);
+    UnloadTexture(estado->texTutorial); // <-- ADICIONADO
     UnloadTexture(estado->texPinguimAndando);
     UnloadTexture(estado->texPinguimPulando);
     UnloadTexture(estado->texObstaculoTerrestre);

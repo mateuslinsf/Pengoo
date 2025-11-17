@@ -3,6 +3,9 @@
 
 #include "raylib.h"
 #include <stdbool.h>
+#include <stdio.h>   // <-- ADICIONADO: Corrige "FILE" undefined
+#include <stdlib.h>  // <-- ADICIONADO: Corrige "malloc" undefined (boa prática)
+#include <string.h>  // <-- ADICIONADO: Corrige "strcpy" undefined (boa prática)
 
 // --- Enum para gerenciar as telas do jogo ---
 typedef enum GameScreen {
@@ -48,8 +51,8 @@ typedef enum GameScreen {
 // --- Estrutura de Nuvens ---
 typedef struct {
     Vector2 position;
-    Color cor;        // Cor de tint (tingimento)
-    float raio;       // Usado como largura da textura
+    Color cor;       // Cor de tint (tingimento)
+    float raio;      // Usado como largura da textura
     float velocidade;
     bool ativa;
 } Nuvem;
@@ -62,9 +65,9 @@ typedef struct {
 
 typedef struct {
     Rectangle hitbox;
-    int tipo;               // 0 = Dano, 1 = Power-Up, 2 = Buraco
+    int tipo;          // 0 = Dano, 1 = Power-Up, 2 = Buraco
     Texture2D textura;
-    int id_power_up;       // 1 = Imortal, 2 = Evo
+    int id_power_up;   // 1 = Imortal, 2 = Evo
 } Obstaculo;
 
 // --- Lista encadeada de obstáculos ---
@@ -103,8 +106,9 @@ typedef struct {
 
     RenderTexture2D target;
 
-    // Textura da capa
+    // Texturas de Tela
     Texture2D texCapa;
+    Texture2D texTutorial; // <-- ADICIONADO
 
     // Texturas do Pinguim
     Texture2D texPinguimAndando;
@@ -151,6 +155,7 @@ typedef struct {
 void InitGame(EstadoJogo* estado, Pinguim* pinguim);
 // --- ASSINATURA DE UPDATEGAME MUDOU ---
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen);
+// --- ASSINATURA DE DRAWGAME MUDOU ---
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen);
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim);
 
