@@ -7,7 +7,7 @@
 #include <stdlib.h>  
 #include <string.h>  
 
-// --- gerenciando as telas do jogo ---
+// --- Enum para gerenciar as telas do jogo ---
 typedef enum GameScreen {
     TELA_TITULO = 0,
     TELA_TUTORIAL,
@@ -21,24 +21,24 @@ typedef enum GameScreen {
 #define PONTOS_PARA_SUBIR_NIVEL 200
 #define INTERVALO_SPAWN_MINIMO 0.7f
 
-// Tamanho jogável do Pengo
+// Tamanho jogável do Pinguim
 #define PINGUIM_LARGURA_BASE 50
 #define PINGUIM_ALTURA_BASE 55
 
-// Tamanho de visualização/hitbox dos Obstáculos 
+// Tamanho de visualização/hitbox dos Obstáculos
 #define OBSTACULO_LARGURA_BASE 40
 #define OBSTACULO_ALTURA_BASE 40
 
-// Largura do buraco 
+// Largura do buraco
 #define LARGURA_BURACO_BLOCO 4
 
-// --- Constantes do poder de Imortalidade ---
+// --- Constantes do Power-Up Imortalidade ---
 #define PONTUACAO_MINIMA_IMORTALIDADE 2000
 #define CICLE_SPAWN_IMORTALIDADE 5
 #define DISTANCIA_IMORTALIDADE 500
 #define TIPO_IMORTAL 5
 
-// --- Constantes do poder EVO (Pulo Triplo) ---
+// --- Constantes do Power-Up EVO (Pulo Triplo) ---
 #define PONTUACAO_MINIMA_EVO 2000
 #define CICLE_SPAWN_EVO 4
 #define DISTANCIA_EVO 500
@@ -85,7 +85,7 @@ typedef struct {
 
     Rectangle hitbox;
 
-    // Poderes 
+    // Power-ups 
     int imortal_distancia_restante;
     int evo_distancia_restante;
     bool imortal_ativo;
@@ -105,6 +105,10 @@ typedef struct {
     int proximoNivelPontuacao;
 
     RenderTexture2D target;
+
+    // --- Áudio (ATIVADO) ---
+    Music musicaBackground;
+    // -----------------------
 
     // Texturas de Tela
     Texture2D texCapa;
@@ -131,7 +135,7 @@ typedef struct {
     Texture2D texObstaculoTerrestre2x1;
     Texture2D texObstaculoVertical;
 
-    // Texturas de Poderes
+    // Texturas de Power-Up
     Texture2D texPowerUpImortal;
     Texture2D texPowerUpEvo;
 
@@ -145,7 +149,7 @@ typedef struct {
     bool bonusCalculado;
 
     // --- VARIÁVEIS PARA O HIGH SCORE ---
-    char nomeJogador[4]; // colocar as iniciais
+    char nomeJogador[4]; // Buffer para as 3 iniciais + '\0'
     int nomeIndex;       // Quantas letras foram digitadas
     int rankingJogador;  // 1, 2, ou 3 (ou 0 se não entrou)
 
@@ -153,9 +157,7 @@ typedef struct {
 
 // --- Protótipos de Funções ---
 void InitGame(EstadoJogo* estado, Pinguim* pinguim);
-// --- ASSINATURA DE UPDATEGAME ---
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen);
-// --- ASSINATURA DE DRAWGAME ---
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen);
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim);
 
@@ -167,4 +169,4 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado);
 void InitNuvens(EstadoJogo* estado);
 void FinalizarJogo(EstadoJogo* estado);
 
-#endif 
+#endif // GAME_H

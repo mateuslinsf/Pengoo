@@ -1,3 +1,8 @@
+/*
+ * ========================================
+ * ARQUIVO DE LÓGICA: src/game.c (CORREÇÃO FINAL DO AUDIO)
+ * ========================================
+ */
 
 #include "game.h"
 #include <stdlib.h>
@@ -13,10 +18,7 @@
 #define FORCA_PULO -8.0f
 #define ARQUIVO_SCORES "highscores.txt"
 
-// Ajuste de Posição Vertical para Obstáculos Terrestres
 #define AJUSTE_VERTICAL 5
-
-// Redefinindo para o novo nome da constante para manter a compatibilidade
 #define DISTANCIA_HABILIDADE DISTANCIA_IMORTALIDADE
 
 
@@ -84,17 +86,12 @@ void adicionarNovoScore(Score topScores[3], int pontuacaoAtual, char* nome, int 
     }
 }
 
-// FinalizarJogo e calcula o ranking
 void FinalizarJogo(EstadoJogo* estado) {
-    if (estado->bonusCalculado) return; // Só roda uma vez
+    if (estado->bonusCalculado) return; 
 
-    estado->rodando = false; // Para o jogo
-
-    // Calcula o bônus
+    estado->rodando = false; 
     estado->pontuacao += (estado->contGod * 500);
     estado->bonusCalculado = true;
-    
-    // Calcula e armazena o ranking
     estado->rankingJogador = obterRanking(estado->topScores, estado->pontuacao);
 }
 
@@ -103,44 +100,34 @@ void FinalizarJogo(EstadoJogo* estado) {
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) {
     int tipo = 0;
 
-    //  Imortalidade (Aéreo)
     if (pontuacao >= PONTUACAO_MINIMA_IMORTALIDADE && estado->power_up_aereo_counter >= CICLE_SPAWN_IMORTALIDADE) {
-        tipo = TIPO_IMORTAL; //(Imortalidade - Pelicano Gold)
+        tipo = TIPO_IMORTAL; 
         estado->power_up_aereo_counter = 0;
     }
-    //  Evo (Terrestre - pós 2000 pontos)
     else if (pontuacao >= PONTUACAO_MINIMA_EVO && estado->power_up_terrestre_counter >= CICLE_SPAWN_EVO) {
-        tipo = TIPO_EVO; //(Evo - Pedra EVO)
+        tipo = TIPO_EVO; 
         estado->power_up_terrestre_counter = 0;
     }
-    //  Spawn Normal
     else {
-        if (pontuacao < 650) {
-            tipo = rand() % 4; 
-        } else {
-            tipo = rand() % 5; 
-        }
+        if (pontuacao < 650) { tipo = rand() % 4; } 
+        else { tipo = rand() % 5; }
     }
-
 
     int obsLargura = OBSTACULO_LARGURA_BASE;
     int obsAltura = OBSTACULO_ALTURA_BASE;
 
-    // Se tipo == 3, criamos o Urso Polar (1x2)
-    if (tipo == 3) {
-
+    if (tipo == 3) { // Urso Polar
         Obstaculo* novoObs = (Obstaculo*)malloc(sizeof(Obstaculo));
         if (novoObs == NULL) return;
         NoObstaculo* novoNo = (NoObstaculo*)malloc(sizeof(NoObstaculo));
         if (novoNo == NULL) { free(novoObs); return; }
 
-        obsAltura = OBSTACULO_ALTURA_BASE * 2; // Urso é 1x2
-
+        obsAltura = OBSTACULO_ALTURA_BASE * 2;
         novoObs->hitbox.x = LARGURA_TELA + 5;
         novoObs->hitbox.y = PISO - obsAltura + AJUSTE_VERTICAL;
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
-        novoObs->textura = estado->texObstaculoTerrestre2x1; // Urso Polar
+        novoObs->textura = estado->texObstaculoTerrestre2x1;
         novoObs->tipo = 0; 
         novoObs->id_power_up = 0;
 
@@ -161,14 +148,14 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
     novoObs->tipo = 0;
     novoObs->id_power_up = 0; 
 
-    if (tipo == 0) { // 1x1 - Pedra 1)
+    if (tipo == 0) { 
         novoObs->hitbox.y = PISO - obsAltura + AJUSTE_VERTICAL;
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
         novoObs->textura = estado->texObstaculoTerrestre;
         if (pontuacao >= PONTUACAO_MINIMA_EVO) estado->power_up_terrestre_counter++;
     }
-    else if (tipo == 1) { // Aéreo (Pelicano Normal)
+    else if (tipo == 1) { 
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
         novoObs->textura = estado->texObstaculoAereoNormal;
@@ -178,7 +165,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         else if (alturaSorteada == 1) { novoObs->hitbox.y = PISO - 100; }
         else { novoObs->hitbox.y = PISO - 80; }
     }
-    else if (tipo == 2) { // Buraco/Chão Quebrado
+    else if (tipo == 2) { 
         novoObs->hitbox.y = PISO;
         novoObs->hitbox.height = 40;
         novoObs->tipo = 2;
@@ -189,7 +176,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         }
         novoObs->hitbox.width = buracoLargura;
     }
-    else if (tipo == 4) { //  Vertical (Pedra 3)
+    else if (tipo == 4) { 
         obsAltura = OBSTACULO_ALTURA_BASE * 3;
         novoObs->hitbox.y = PISO - obsAltura + 10 + AJUSTE_VERTICAL;
         novoObs->hitbox.width = obsLargura;
@@ -197,7 +184,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         novoObs->textura = estado->texObstaculoVertical;
         novoObs->tipo = 0;
     }
-    else if (tipo == TIPO_IMORTAL) { // Imortalidade (Pelicano Gold)
+    else if (tipo == TIPO_IMORTAL) { 
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
         novoObs->textura = estado->texPowerUpImortal;
@@ -208,7 +195,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         else if (alturaSorteada == 1) { novoObs->hitbox.y = PISO - 120; }
         else { novoObs->hitbox.y = PISO - 100; }
     }
-    else if (tipo == TIPO_EVO) { // Evo (Terrestre: pedra1_evo)
+    else if (tipo == TIPO_EVO) { 
         obsAltura = OBSTACULO_ALTURA_BASE;
         novoObs->hitbox.y = PISO - obsAltura + AJUSTE_VERTICAL;
         novoObs->hitbox.width = obsLargura;
@@ -229,10 +216,28 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
 void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     srand((unsigned int)time(NULL));
 
+    // --- ÁUDIO: CARREGAR MÚSICA ---
+    // IMPORTANTE: Removemos o InitAudioDevice() daqui porque ele já deve estar no main.c
+    // Apenas verificamos se está pronto para carregar a música.
+    
+    if (IsAudioDeviceReady()) {
+        estado->musicaBackground = LoadMusicStream("audios/musica_fundo.ogg");
+        
+        if (estado->musicaBackground.stream.buffer != NULL) {
+            SetMusicVolume(estado->musicaBackground, 0.5f);
+            PlayMusicStream(estado->musicaBackground);
+            printf("INFO: [GAME] Musica carregada com sucesso!\n");
+        } else {
+            printf("AVISO: [GAME] Musica 'audios/musica_fundo.ogg' nao encontrada ou invalida.\n");
+        }
+    } else {
+        printf("AVISO: [GAME] Dispositivo de audio nao esta pronto (verifique o main.c).\n");
+    }
+    // ----------------------------
+
     estado->texCapa = LoadTexture("imagens_jogo/cenario/capa_inicial.jpeg");
     if (estado->texCapa.id > 0) SetTextureFilter(estado->texCapa, TEXTURE_FILTER_BILINEAR);
 
-    // --- Carrega a textura do tutorial ---
     estado->texTutorial = LoadTexture("imagens_jogo/cenario/tutorial.jpg");
     if (estado->texTutorial.id > 0) SetTextureFilter(estado->texTutorial, TEXTURE_FILTER_BILINEAR);
 
@@ -286,7 +291,6 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     estado->godAtivoAnterior = false;
     estado->bonusCalculado = false;
 
-    // Inicializa novas variáveis
     estado->nomeIndex = 0;
     estado->rankingJogador = 0;
     estado->nomeJogador[0] = '\0';
@@ -304,10 +308,15 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     InitNuvens(estado);
 }
 
-// UpdateGame gerencia todos os estados do jogo
-
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen) {
     
+    // --- ATUALIZA O STREAM DE ÁUDIO ---
+    // Essencial para a música não travar
+    if (IsAudioDeviceReady()) {
+        UpdateMusicStream(estado->musicaBackground);
+    }
+    // ----------------------------------
+
     switch (*currentScreen) {
         
         case TELA_TITULO: {
@@ -323,17 +332,15 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
         } break;
         
         case JOGANDO: {
-            // Se o jogo não está rodando, é porque o jogador perdeu no frame anterior
             if (!estado->rodando) {
                 if (estado->rankingJogador > 0) {
                     *currentScreen = FIM_DE_JOGO_INPUT;
                 } else {
                     *currentScreen = FIM_DE_JOGO_FINAL;
                 }
-                return; // Sai do Update
+                return; 
             }
             
-            // --- Lógica do Jogo Rodando ---
             if (IsKeyPressed(KEY_SPACE)) {
                 if (pinguim->estaNoChao) {
                     pinguim->velocidade_y = FORCA_PULO;
@@ -386,7 +393,7 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
             }
 
             if (pinguim->position.y > ALTURA_TELA) {
-                FinalizarJogo(estado); // Morte por queda
+                FinalizarJogo(estado);
                 return; 
             }
 
@@ -470,14 +477,14 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
                     }
                     else if (atual->obstaculo->tipo == 0) { 
                         if (!pinguim->imortal_ativo) {
-                            FinalizarJogo(estado); // Morte por colisão
+                            FinalizarJogo(estado);
                             break; 
                         } else {
                             atual->obstaculo->tipo = -1;
                         }
                     }
                     else if (atual->obstaculo->tipo == 2) { 
-                        FinalizarJogo(estado); // Morte por colisão (buraco)
+                        FinalizarJogo(estado); 
                         break;
                     }
                 }
@@ -488,12 +495,8 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
         } break;
         
         case FIM_DE_JOGO_INPUT: {
-            // Lógica de Captura de Tecla
             int key = GetCharPressed(); 
-            
-            
             if (key >= 'a' && key <= 'z') key = key - 32; 
-            
             if (key >= 'A' && key <= 'Z') {
                 if (estado->nomeIndex < 3) {
                     estado->nomeJogador[estado->nomeIndex] = (char)key;
@@ -501,17 +504,14 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
                     estado->nomeJogador[estado->nomeIndex] = '\0';
                 }
             }
-            
             if (IsKeyPressed(KEY_BACKSPACE)) {
                 if (estado->nomeIndex > 0) {
                     estado->nomeIndex--;
                     estado->nomeJogador[estado->nomeIndex] = '\0';
                 }
             }
-            
             if (IsKeyPressed(KEY_ENTER)) {
                 if (estado->nomeIndex == 3) {
-                    // Salvar o score
                     adicionarNovoScore(estado->topScores, estado->pontuacao, estado->nomeJogador, estado->rankingJogador);
                     salvarHighScores(estado->topScores);
                     *currentScreen = FIM_DE_JOGO_FINAL;
@@ -522,18 +522,16 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
         
         case FIM_DE_JOGO_FINAL: {
             if (IsKeyPressed(KEY_X)) {
-                CloseWindow(); // Mantém o X para sair
+                CloseWindow();
             }
         } break;
     }
 }
 
 
-// Desenha o cenário do jogo (céu, nuvens, chão, pinguim, obstáculos)
 void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
     ClearBackground(SKYBLUE);
 
-    // --- Desenha as Nuvens ---
     for (int i = 0; i < NUM_NUVENS; i++) {
         Nuvem* nuvem = &estado->nuvens[i];
         if (nuvem->ativa && estado->texNuvem.id > 0) {
@@ -545,7 +543,6 @@ void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
         }
     }
 
-    // --- Desenha o Chão ---
     int numTiles = LARGURA_TELA / OBSTACULO_LARGURA_BASE;
     if (estado->texChao.id > 0) {
         for (int i = 0; i < numTiles; i++) {
@@ -558,7 +555,6 @@ void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
         DrawRectangle(0, PISO, LARGURA_TELA, 40, BLACK);
     }
 
-    // --- Desenha o Pinguim ---
     bool isImortal = pinguim->imortal_distancia_restante > 0;
     bool isEvo = pinguim->evo_distancia_restante > 0;
     bool isGod = isImortal && isEvo;
@@ -573,8 +569,6 @@ void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
     Rectangle destRect = { pinguim->position.x, pinguim->position.y, (float)PINGUIM_LARGURA_BASE, (float)PINGUIM_ALTURA_BASE };
     DrawTexturePro(texAtual, sourceRect, destRect, (Vector2){0,0}, 0.0f, WHITE);
 
-
-    // --- Desenha os Obstáculos ---
     NoObstaculo* atual = estado->listaDeObstaculos;
     while (atual != NULL) {
         Obstaculo* obs = atual->obstaculo;
@@ -596,17 +590,12 @@ void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
     }
 }
 
-
-//
-// DrawGame agora desenha as telas de Game Over
-//
 void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
 
     switch (currentScreen) {
         
         case TELA_TITULO: {
-            // --- TELA DE TÍTULO ---
-            ClearBackground(SKYBLUE); 
+            ClearBackground(SKYBLUE);
             if (estado->texCapa.id > 0) {
                 Rectangle sourceRect = { 0.0f, 0.0f, (float)estado->texCapa.width, (float)estado->texCapa.height };
                 Rectangle destRect = { 0, 0, LARGURA_TELA, ALTURA_TELA };
@@ -617,9 +606,8 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             }
         } break;
         
-        // Case para a Tela de Tutorial
         case TELA_TUTORIAL: {
-            ClearBackground(SKYBLUE); 
+            ClearBackground(SKYBLUE);
             if (estado->texTutorial.id > 0) {
                 Rectangle sourceRect = { 0.0f, 0.0f, (float)estado->texTutorial.width, (float)estado->texTutorial.height };
                 Rectangle destRect = { 0, 0, LARGURA_TELA, ALTURA_TELA };
@@ -631,10 +619,7 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
         } break;
         
         case JOGANDO: {
-            // --- TELA DE JOGO (RODANDO) ---
-            DrawGameScene(estado, pinguim); // Desenha o jogo
-            
-            // --- Desenha o HUD ---
+            DrawGameScene(estado, pinguim);
             bool isImortal = pinguim->imortal_distancia_restante > 0;
             bool isEvo = pinguim->evo_distancia_restante > 0;
             bool isGod = isImortal && isEvo;
@@ -654,23 +639,15 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             
             char hud[200];
             char power_up_status[60] = "";
-            if (isImortal || isEvo) {
-                sprintf(power_up_status, " | %s! (%d)", statusName, remainingDistance);
-            }
+            if (isImortal || isEvo) sprintf(power_up_status, " | %s! (%d)", statusName, remainingDistance);
             sprintf(hud, "Pontos: %d | Velocidade: %.1f%s | RECORDE: %s %d",
                     estado->pontuacao, estado->velocidadeJogo, power_up_status, estado->topScores[0].nome, estado->topScores[0].pontuacao);
             DrawText(hud, 10, 10, 20, BLACK);
-            
         } break;
         
         case FIM_DE_JOGO_INPUT: {
-            // --- TELA DE INPUT DE NOME ---
-            DrawGameScene(estado, pinguim); // Desenha o jogo pausado no fundo
-            
-            // Overlay escuro
+            DrawGameScene(estado, pinguim);
             DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, (Color){ 0, 0, 0, 150 });
-            
-            // Textos
             DrawText("G A M E   O V E R", LARGURA_TELA/2 - MeasureText("G A M E   O V E R", 40)/2, ALTURA_TELA/2 - 120, 40, RED);
 
             char textoRank[100];
@@ -681,30 +658,19 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             sprintf(textoPrompt, "DIGITE SUAS 3 INICIAIS: %s", estado->nomeJogador);
             DrawText(textoPrompt, LARGURA_TELA/2 - MeasureText(textoPrompt, 20)/2, ALTURA_TELA/2 + 10, 20, WHITE);
 
-            // Cursor piscante
             if (((int)(GetTime() * 2)) % 2 == 0 && estado->nomeIndex < 3) {
                 int textWidth = MeasureText(textoPrompt, 20);
                 int promptBaseWidth = MeasureText("DIGITE SUAS 3 INICIAIS: ", 20);
                 DrawText("_", (LARGURA_TELA/2 - textWidth/2) + promptBaseWidth + MeasureText(estado->nomeJogador, 20), ALTURA_TELA/2 + 10, 20, WHITE);
             }
-
-            if (estado->nomeIndex == 3) {
-                 DrawText("Pressione ENTER para confirmar", LARGURA_TELA/2 - MeasureText("Pressione ENTER para confirmar", 20)/2, ALTURA_TELA - 40, 20, LIME);
-            }
-
+            if (estado->nomeIndex == 3) DrawText("Pressione ENTER para confirmar", LARGURA_TELA/2 - MeasureText("Pressione ENTER para confirmar", 20)/2, ALTURA_TELA - 40, 20, LIME);
         } break;
         
         case FIM_DE_JOGO_FINAL: {
-            // --- TELA FINAL (SCORE + TOP 3) ---
-            DrawGameScene(estado, pinguim); // Desenha o jogo pausado no fundo
-
-            // Overlay escuro
+            DrawGameScene(estado, pinguim);
             DrawRectangle(0, 0, LARGURA_TELA, ALTURA_TELA, (Color){ 0, 0, 0, 150 });
-
-            // "GAME OVER"
             DrawText("G A M E   O V E R", LARGURA_TELA/2 - MeasureText("G A M E   O V E R", 40)/2, ALTURA_TELA/2 - 140, 40, RED);
 
-            // --- Textos do Score ---
             int bonusGod = (estado->contGod * 500);
             int pontuacaoBase = estado->pontuacao - bonusGod;
 
@@ -716,12 +682,11 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
             sprintf(textoBonus, "Bonus GOD (x%d): %d", estado->contGod, bonusGod);
             sprintf(textoTotal, "TOTAL: %d", estado->pontuacao);
 
-            int y_start = ALTURA_TELA/2 - 80; // Posição Y inicial dos textos
+            int y_start = ALTURA_TELA/2 - 80;
             DrawText(textoScoreBase, LARGURA_TELA/2 - MeasureText(textoScoreBase, 20)/2, y_start, 20, WHITE);
             DrawText(textoBonus, LARGURA_TELA/2 - MeasureText(textoBonus, 20)/2, y_start + 30, 20, YELLOW);
             DrawText(textoTotal, LARGURA_TELA/2 - MeasureText(textoTotal, 30)/2, y_start + 70, 30, GREEN);
 
-            // --- escreve o top 3 ---
             int y_top3 = y_start + 120;
             DrawText("--- TOP 3 SCORES ---", LARGURA_TELA/2 - MeasureText("--- TOP 3 SCORES ---", 20)/2, y_top3, 20, WHITE);
 
@@ -731,7 +696,6 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
                 DrawText(scoreLinha, LARGURA_TELA/2 - MeasureText(scoreLinha, 20)/2, y_top3 + 30 + (i * 25), 20, WHITE);
             }
 
-            // --- Texto de Sair ---
             if (((int)(GetTime() * 2)) % 2 == 0) { 
                 char textoOpcoes[100];
                 sprintf(textoOpcoes, "Pressione [X] para sair");
@@ -741,10 +705,18 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
     }
 }
 
-
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
+    // --- DESCARREGA ÁUDIO ---
+    // Removemos a inicialização de áudio do game.c, então removemos o fechamento também,
+    // exceto pelo unload do stream da música, que é responsabilidade do game.c
+    if (IsAudioDeviceReady()) {
+        UnloadMusicStream(estado->musicaBackground);
+    }
+    // CloseAudioDevice(); // Removido, pois o main.c deve fechar
+    // -----------------------
+
     UnloadTexture(estado->texCapa);
-    UnloadTexture(estado->texTutorial); 
+    UnloadTexture(estado->texTutorial);
     UnloadTexture(estado->texPinguimAndando);
     UnloadTexture(estado->texPinguimPulando);
     UnloadTexture(estado->texObstaculoTerrestre);
