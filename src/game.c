@@ -1,9 +1,3 @@
-/*
- * ========================================
- * ARQUIVO DE LÓGICA: src/game.c (CORREÇÃO FINAL DO AUDIO)
- * ========================================
- */
-
 #include "game.h"
 #include <stdlib.h>
 #include <string.h>
@@ -96,7 +90,7 @@ void FinalizarJogo(EstadoJogo* estado) {
 }
 
 
-// --- Funções da Lista Encadeada (Obstáculos) ---
+// Funções da Lista Encadeada (Obstáculos)
 void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) {
     int tipo = 0;
 
@@ -188,7 +182,7 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
         novoObs->hitbox.width = obsLargura;
         novoObs->hitbox.height = obsAltura;
         novoObs->textura = estado->texPowerUpImortal;
-        novoObs->tipo = 1;
+        novoObs->tipo = 1; 
         novoObs->id_power_up = 1; 
         int alturaSorteada = rand() % 3;
         if (alturaSorteada == 0) { novoObs->hitbox.y = PISO - 140; }
@@ -216,10 +210,16 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
 void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     srand((unsigned int)time(NULL));
 
-    // --- ÁUDIO: CARREGAR MÚSICA ---
-    // IMPORTANTE: Removemos o InitAudioDevice() daqui porque ele já deve estar no main.c
-    // Apenas verificamos se está pronto para carregar a música.
+    // INICIALIZAÇÃO DA MATRIZ DE CORES
+    // Índice 0: Azul Claro (Padrão)
+    estado->matrizCores[0][0] = 102; estado->matrizCores[0][1] = 191; estado->matrizCores[0][2] = 255;
     
+    // Índice 1: Azul mais Escuro
+    estado->matrizCores[1][0] = 60;  estado->matrizCores[1][1] = 100; estado->matrizCores[1][2] = 160;
+
+    // Índice 2: Azul Amarelado
+    estado->matrizCores[2][0] = 205; estado->matrizCores[2][1] = 180; estado->matrizCores[2][2] = 50;
+
     if (IsAudioDeviceReady()) {
         estado->musicaBackground = LoadMusicStream("audios/musica_fundo.ogg");
         
@@ -233,7 +233,7 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     } else {
         printf("AVISO: [GAME] Dispositivo de audio nao esta pronto (verifique o main.c).\n");
     }
-    // ----------------------------
+   
 
     estado->texCapa = LoadTexture("imagens_jogo/cenario/capa_inicial.jpeg");
     if (estado->texCapa.id > 0) SetTextureFilter(estado->texCapa, TEXTURE_FILTER_BILINEAR);
@@ -310,12 +310,9 @@ void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
 
 void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen) {
     
-    // --- ATUALIZA O STREAM DE ÁUDIO ---
-    // Essencial para a música não travar
     if (IsAudioDeviceReady()) {
         UpdateMusicStream(estado->musicaBackground);
     }
-    // ----------------------------------
 
     switch (*currentScreen) {
         
@@ -528,9 +525,21 @@ void UpdateGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen* currentScreen)
     }
 }
 
+// Função para calcular a cor
+Color ObterCorCenario(EstadoJogo* estado) {
+    int indice = (estado->pontuacao / 2000) % 3;
+
+    return (Color){
+        (unsigned char)estado->matrizCores[indice][0],
+        (unsigned char)estado->matrizCores[indice][1],
+        (unsigned char)estado->matrizCores[indice][2],
+        255
+    };
+}
 
 void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
-    ClearBackground(SKYBLUE);
+    // Usa a função nova ao invés de cor fixa
+    ClearBackground(ObterCorCenario(estado));
 
     for (int i = 0; i < NUM_NUVENS; i++) {
         Nuvem* nuvem = &estado->nuvens[i];
@@ -707,14 +716,10 @@ void DrawGame(EstadoJogo* estado, Pinguim* pinguim, GameScreen currentScreen) {
 
 void UnloadGame(EstadoJogo* estado, Pinguim* pinguim) {
     // --- DESCARREGA ÁUDIO ---
-    // Removemos a inicialização de áudio do game.c, então removemos o fechamento também,
-    // exceto pelo unload do stream da música, que é responsabilidade do game.c
     if (IsAudioDeviceReady()) {
         UnloadMusicStream(estado->musicaBackground);
     }
-    // CloseAudioDevice(); // Removido, pois o main.c deve fechar
-    // -----------------------
-
+   
     UnloadTexture(estado->texCapa);
     UnloadTexture(estado->texTutorial);
     UnloadTexture(estado->texPinguimAndando);

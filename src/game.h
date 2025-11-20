@@ -3,9 +3,9 @@
 
 #include "raylib.h"
 #include <stdbool.h>
-#include <stdio.h>   
-#include <stdlib.h>  
-#include <string.h>  
+#include <stdio.h>    
+#include <stdlib.h>   
+#include <string.h>   
 
 // --- Enum para gerenciar as telas do jogo ---
 typedef enum GameScreen {
@@ -51,8 +51,8 @@ typedef enum GameScreen {
 // --- Estrutura de Nuvens ---
 typedef struct {
     Vector2 position;
-    Color cor;       
-    float raio;      
+    Color cor;        
+    float raio;       
     float velocidade;
     bool ativa;
 } Nuvem;
@@ -65,9 +65,9 @@ typedef struct {
 
 typedef struct {
     Rectangle hitbox;
-    int tipo;          
+    int tipo;           
     Texture2D textura;
-    int id_power_up;   
+    int id_power_up;    
 } Obstaculo;
 
 // --- Lista encadeada de obstáculos ---
@@ -108,7 +108,6 @@ typedef struct {
 
     // --- Áudio (ATIVADO) ---
     Music musicaBackground;
-    // -----------------------
 
     // Texturas de Tela
     Texture2D texCapa;
@@ -148,10 +147,13 @@ typedef struct {
     bool godAtivoAnterior;
     bool bonusCalculado;
 
-    // --- VARIÁVEIS PARA O HIGH SCORE ---
-    char nomeJogador[4]; // Buffer para as 3 iniciais + '\0'
-    int nomeIndex;       // Quantas letras foram digitadas
-    int rankingJogador;  // 1, 2, ou 3 (ou 0 se não entrou)
+    // VARIÁVEIS PARA O HIGH SCORE
+    char nomeJogador[4]; 
+    int nomeIndex;       
+    int rankingJogador;  
+
+   
+    int matrizCores[3][3]; 
 
 } EstadoJogo;
 
@@ -169,4 +171,6 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado);
 void InitNuvens(EstadoJogo* estado);
 void FinalizarJogo(EstadoJogo* estado);
 
-#endif // GAME_H
+Color ObterCorCenario(EstadoJogo* estado);
+
+#endif 
