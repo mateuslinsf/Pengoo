@@ -29,6 +29,79 @@ O **Pengoo** é um game baseado no cliff jump (pou), em que o personagem princip
 
 ---
 
+## 💻 Como Baixar e Compilar
+Para jogar **Pengoo!**, você precisará clonar o repositório e compilar o código-fonte.
+
+### 1. Pré-requisitos
+Certifique-se de ter instalado em sua máquina:
+
+- Git  
+- Compilador C (GCC)  
+- Raylib (Instalada via Homebrew no macOS ou gerenciador de pacotes no Linux)  
+
+No Windows, utilize o **WSL + Ubuntu** para compilar o jogo.
+
+---
+
+### 2. Clonando o Repositório
+Abra seu terminal e execute:
+
+git clone https://github.com/mateuslinsf/Pengoo.git
+
+cd Pengoo
+
+
+---
+
+### 3. Compilando e Rodando
+
+---
+
+### 🍎 macOS (Via Homebrew)
+Se você usa macOS e instalou a Raylib via Homebrew, utilize:
+gcc -std=c99 *.c -o pengoo -lraylib -lm -lpthread -ldl -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+
+
+Para rodar o jogo:
+
+./pengoo
+
+
+---
+
+### 🐧 Linux (Ubuntu/Debian)
+Certifique-se de ter as dependências instaladas e rode:
+
+gcc -std=c99 *.c -o pengoo -lraylib -lm -lpthread -ldl -lGL
+
+Para rodar:
+
+./pengoo
+
+
+---
+
+### 🪟 Windows (via WSL + Ubuntu)
+⚠️ O jogo foi desenvolvido e testado apenas em Linux.  
+Para jogar no Windows, utilize o **WSL** e instale o Ubuntu:
+
+Instale o WSL:
+
+wsl --install
+
+
+Depois, no Ubuntu:
+
+sudo apt update
+sudo apt install gcc make libraylib-dev
+gcc -std=c99 *.c -o pengoo -lraylib -lm -lpthread -ldl -lGL
+
+
+Para rodar:
+
+./pengoo
+
+
 ## Equipe de Desenvolvimento 👥: 
 
 * **Luiz Felipe Siqueira** - [@LuizNoCode](https://github.com/LuizNoCode)
