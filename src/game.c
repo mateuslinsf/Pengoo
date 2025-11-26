@@ -205,13 +205,13 @@ void adicionarObstaculo(NoObstaculo** lista, int pontuacao, EstadoJogo* estado) 
 }
 
 
-// --- Funções principais do jogo ---
+// Funções principais do jogo
 
+ // INICIALIZAÇÃO DA matriz de cores
 void InitGame(EstadoJogo* estado, Pinguim* pinguim) {
     srand((unsigned int)time(NULL));
 
-    // INICIALIZAÇÃO DA MATRIZ DE CORES
-    // Índice 0: Azul Claro (Padrão)
+    // Índice 0: Azul Claro
     estado->matrizCores[0][0] = 102; estado->matrizCores[0][1] = 191; estado->matrizCores[0][2] = 255;
     
     // Índice 1: Azul mais Escuro
@@ -538,7 +538,6 @@ Color ObterCorCenario(EstadoJogo* estado) {
 }
 
 void DrawGameScene(EstadoJogo* estado, Pinguim* pinguim) {
-    // Usa a função nova ao invés de cor fixa
     ClearBackground(ObterCorCenario(estado));
 
     for (int i = 0; i < NUM_NUVENS; i++) {

@@ -37,28 +37,28 @@ int main(void) {
     estado.target = LoadRenderTexture(GAME_VIRTUAL_WIDTH, GAME_VIRTUAL_HEIGHT);
     SetTextureFilter(estado.target.texture, TEXTURE_FILTER_BILINEAR);
 
-    // carrega TODAS as texturas 
+    // carrega as texturas 
     InitGame(&estado, &pinguim);
 
     // Loop principal
     while (!WindowShouldClose()) {
 
-        // Fullscreen com F11
+        // F11 = Tela cheia
         if (IsKeyPressed(KEY_F11)) {
             ToggleFullscreen();
         }
         
-        // UpdateGame gerencia as atualizações e transições de tela
+        // gerencia as atualizações e transições de tela
         UpdateGame(&estado, &pinguim, &currentScreen);
         
 
-        // --- 1. Renderização no Target Virtual ---
+        // --- Renderização no Target Virtual ---
         BeginTextureMode(estado.target);
-            // DrawGame desenha a tela (Titulo, Tutorial, Jogo, etc)
+            // DrawGame desenha a tela 
             DrawGame(&estado, &pinguim, currentScreen);
         EndTextureMode();
 
-        // --- 2. Desenha na tela real com letterbox ---
+        // --- Desenha na tela real com letterbox ---
         BeginDrawing();
             ClearBackground(BLACK);
 
@@ -81,7 +81,6 @@ int main(void) {
         EndDrawing();
     }
 
-    // --- 3. Finalização ---
     UnloadRenderTexture(estado.target);
     UnloadGame(&estado, &pinguim);
     CloseWindow();

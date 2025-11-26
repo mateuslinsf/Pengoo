@@ -106,7 +106,7 @@ typedef struct {
 
     RenderTexture2D target;
 
-    // --- Áudio (ATIVADO) ---
+    // --- Áudio ---
     Music musicaBackground;
 
     // Texturas de Tela
