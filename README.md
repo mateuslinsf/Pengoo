@@ -2,10 +2,8 @@
 
 ## Descrição do Projeto 
 
-O **Pengoo** é um game em C, criado para o projeto da disciplina de PIF 25.2. O jogo foi baseado no cliff jump (pou), em que o personagem principal, Pengo, surfa em uma prancha e deve saltar e desviar de rachaduras no chão, obstáculos terrestres/aéreos para evitar cair ou colidir.
+O **Pengoo** é um game em C, criado para o projeto da disciplina de PIF 2025.2. O jogo foi baseado no cliff jump (pou), em que o personagem principal, Pengo, surfa em uma prancha e deve saltar e desviar de rachaduras no chão, obstáculos terrestres/aéreos para evitar cair ou colidir.
 
-## 🎥 Gameplay (YouTube) 
-➡️ **[Clique aqui para assistir à gameplay no YouTube](https://youtu.be/cSVGJa9Q814?feature=shared)**
 
 ## Mecânicas do Game 🎮
 
@@ -29,6 +27,9 @@ O **Pengoo** é um game em C, criado para o projeto da disciplina de PIF 25.2. O
 <img src="imagens_jogo/cenario/gameplay.png" alt="game play" width="250"/> 
 <img src="imagens_jogo/cenario/gameover.png" alt=" game over " width="250"/> 
 
+
+## 🎥 Gameplay (YouTube) 
+➡️ **[Clique aqui para assistir à gameplay no YouTube](https://youtu.be/cSVGJa9Q814?feature=shared)**
 
 ---
 
