@@ -4,6 +4,10 @@
 
 O **Pengoo** é um game baseado no cliff jump (pou), em que o personagem principal, Pengo, surfa em uma prancha e deve saltar e desviar de rachaduras no chão, obstáculos terrestres/aéreos para evitar cair ou colidir.
 
+## 🎥 Gameplay (YouTube)
+➡️ **Insira o link do vídeo da gameplay aqui:**  
+**https://youtu.be/cSVGJa9Q814?feature=shared**
+
 ## Mecânicas do Game 🎮
 
   <li> Jogador pressiona o botão espaço para fazer o Pengo pular, se apertar duas vezes faz um pulo duplo.
