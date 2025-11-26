@@ -65,3 +65,5 @@ gcc main.c game.c-o pengoo -lraylib -1GL-1m-lpthread-1dl-Irt-1X11
 Para rodar o jogo:
 
 ./pengoo
+
+---
