@@ -54,11 +54,8 @@ Abra seu terminal e execute:
 git clone https://github.com/mateuslinsf/Pengoo.git
 cd Pengoo
 
-
 ---
 
-
----
 
 ### 3. Compilando e Rodando (Linux)
 
