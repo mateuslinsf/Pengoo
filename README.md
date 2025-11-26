@@ -67,3 +67,9 @@ Para rodar o jogo:
 ./pengoo
 
 ---
+
+## 👥 Equipe de Desenvolvimento 
+
+* **Luiz Felipe Siqueira** - [@LuizNoCode](https://github.com/LuizNoCode)
+* **Mateus Lins Farias** - [@mateuslinsf](https://github.com/mateuslinsf)
+* **Pedro David Oliveira Baia** - [@Pedrodavidob](https://github.com/Pedrodavidob)
