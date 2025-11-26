@@ -37,9 +37,10 @@ Certifique-se de ter instalado em sua máquina:
 
 - Git  
 - Compilador C (GCC)  
-- Raylib (Instalada via Homebrew no macOS ou gerenciador de pacotes no Linux)  
+- Raylib (via gerenciador de pacotes no Linux)  
 
-No Windows, utilize o **WSL + Ubuntu** para compilar o jogo.
+⚠️ **Atenção:** O jogo foi desenvolvido e testado apenas em **Linux**.  
+A compatibilidade com **macOS** e **Windows** não foi verificada.
 
 ---
 
