@@ -48,20 +48,19 @@ A compatibilidade com **macOS** e **Windows** não foi verificada.
 Abra seu terminal e execute:
 
 git clone https://github.com/mateuslinsf/Pengoo.git
-
 cd Pengoo
 
 
 ---
 
-### 3. Compilando e Rodando
 
 ---
 
-### 🍎 macOS (Via Homebrew)
-Se você usa macOS e instalou a Raylib via Homebrew, utilize:
-gcc -std=c99 *.c -o pengoo -lraylib -lm -lpthread -ldl -framework OpenGL -framework Cocoa -framework IOKit -framework CoreVideo
+### 3. Compilando e Rodando (Linux)
 
+Compile o jogo:
+
+gcc main.c game.c-o pengoo -lraylib -1GL-1m-lpthread-1dl-Irt-1X11
 
 Para rodar o jogo:
 
