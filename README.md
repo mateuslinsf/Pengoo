@@ -62,6 +62,7 @@ cd Pengoo
 Compile o jogo:
 
 gcc src/main.c src/game.c -o pengoo -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+make
 
 Para rodar o jogo:
 
