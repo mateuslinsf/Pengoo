@@ -9,7 +9,7 @@ O **Pengoo** é um game em C, criado para o projeto da disciplina de PIF 2025.2.
 
   <li> Jogador pressiona o botão espaço para fazer o Pengo pular, se apertar duas vezes faz um pulo duplo.
   <li> Ao coletar o Cristal Roxo, Jogador ganha o poder de pulo triplo temporariamente com o Pengo EVO.
-  <li> Ao coletar a Gaviota especial, Jogador ganha o poder de imortalidade temporária com o Pengo GOLD.
+  <li> Ao coletar a Gaivota dourada, Jogador ganha o poder de imortalidade temporária com o Pengo GOLD.
   <li> Ao coletar os dois poderes, Jogador fica com os dois poderes ao mesmo tempo temporariamente e o Pengo se transfoma em Pengo GOD.
   <li> Jogador deve desviar de ursos polares, obstáculos de gelo, gaivotas e gelo quebrando no chão.
 
